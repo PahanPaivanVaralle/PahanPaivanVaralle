@@ -3,6 +3,7 @@ import {DefaultTheme, NavigationContainer} from "@react-navigation/native";
 import Home from "./pages/home";
 import NavBar from "./components/navbar";
 import {StyleSheet, View} from "react-native";
+import Camera from "./pages/Camera";
 
 const Stack = createNativeStackNavigator();
 
@@ -15,11 +16,9 @@ const MyTheme = {
 };
 function RootStack() {
   return (
-      <NavBar>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={Home} />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Tabs" component={NavBar} />
       </Stack.Navigator>
-      </NavBar>
   );
 }
 

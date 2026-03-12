@@ -1,6 +1,8 @@
 import Home from "../pages/home";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import Camera from "../pages/Camera";
+import MapPage from "../pages/map";
 
 const Tab = createBottomTabNavigator();
 
@@ -21,7 +23,7 @@ export default function NavBar() {
             />
             <Tab.Screen
                 name="Map"
-                component={Home}
+                component={MapPage}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="map" size={size} color={color} />
@@ -30,7 +32,7 @@ export default function NavBar() {
             />
             <Tab.Screen
                 name="Camera"
-                component={Home}
+                component={Camera}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="camera" size={size} color={color} />
