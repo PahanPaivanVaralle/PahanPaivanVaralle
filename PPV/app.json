@@ -32,6 +32,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Sovellus tarvitsee sijaintisi karttaa varten."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Sovellus tarvitsee kameraa kuvien ottamiseen karttaan."
+        }
       ]
     ]
   }
