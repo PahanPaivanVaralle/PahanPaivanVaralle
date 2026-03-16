@@ -1,19 +1,39 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import { Text, View, Image } from 'react-native';
+import {styles} from "../global";
+import PocketBase from 'pocketbase';
+import {useEffect, useState} from "react";
 
+const pb = new PocketBase('https://pocketbase.misteri.fi')
 
 export default function Home() {
+
+    const [token, setToken] = useState("");
+
+    useEffect(() => {
+        const login = async () => {
+            try {
+                const authData = await pb.collection("users")
+                    .authWithPassword('xcodeyt@gmail.com', 'xzD%ZVn3mQKIEB');
+
+                console.log(pb.authStore.isValid);
+                console.log(pb.authStore.token);
+
+                setToken(pb.authStore.token);
+            } catch (err) {
+                console.log("Login error:", err);
+            }
+        };
+
+        login();
+    }, []);
+
     return (
         
         <View style={styles.container}>
             <View style={styles.TextContainer}>
                 <Text style={styles.textStyle}>
-                    Tähän voi tulla sitä tekstiä yms.....
-                    asdddssssssssssssssssssssssssssssssssssss
-                    sssssssssssssssssssssssssssssssssss
-                    ssssMikko Tykkää Pojista ja ehkä tytöistä
-                   
-                   
+                    {pb.authStore.token.toString()}
                 </Text>
             </View>
             <View style={styles.imageContainer}>
@@ -30,45 +50,3 @@ export default function Home() {
         </View>
     );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-
-  },
-    TextContainer: {
-   marginTop: 50,             
-    alignSelf: 'center',       
-    width: '90%',               
-    backgroundColor: '#ffbff2',    
-    padding: 20,                
-    borderRadius: 15,        
-    borderWidth: 1,             
-    borderColor: '#ccc',        
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    columnGap: 20,
-  },
-    textStyle: {
-    fontSize: 30,
-    color: '#333',
-    textAlign: 'center',
-  },
-    imageStyle: {   
-   flex: 1,
-  height: 200,
-  borderRadius: 15,
-  marginTop: 50,
-    
-  },
-  imageContainer: {
-  flexDirection: 'row',
-  gap: 10,
-}
-});

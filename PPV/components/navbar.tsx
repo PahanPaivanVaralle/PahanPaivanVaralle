@@ -1,6 +1,7 @@
 import Home from "../pages/home";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import {styles} from "../global";
 import Camera from "../pages/Camera";
 import MapPage from "../pages/map";
 

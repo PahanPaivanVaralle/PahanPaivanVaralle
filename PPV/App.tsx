@@ -1,9 +1,7 @@
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
 import {DefaultTheme, NavigationContainer} from "@react-navigation/native";
-import Home from "./pages/home";
+import {styles} from "./global";
 import NavBar from "./components/navbar";
-import {StyleSheet, View} from "react-native";
-import Camera from "./pages/Camera";
 
 const Stack = createNativeStackNavigator();
 
@@ -11,7 +9,7 @@ const MyTheme = {
     ...DefaultTheme,
     colors: {
         ...DefaultTheme.colors,
-        background: "#E4ACEA",
+        background: styles.background.backgroundColor,
     },
 };
 function RootStack() {
@@ -29,9 +27,3 @@ export default function App() {
       </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: "#E4ACEA",
-    }
-});

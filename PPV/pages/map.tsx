@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
+import {styles} from "../global";
 import { WebView } from "react-native-webview";
 import * as Location from "expo-location";
 
@@ -75,12 +76,3 @@ export default function MapPage() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-});
