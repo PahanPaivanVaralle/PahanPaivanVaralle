@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -10,7 +10,24 @@ import {
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
+import { useFocusEffect } from "@react-navigation/native";
 import { pb } from "../lib/pocketbase";
+
+interface ImageRecord {
+  id: string;
+  image: string;
+}
+
+interface MapMarkerRecord {
+  id: string;
+  lang: number;
+  long: number;
+  title?: string;
+  icon?: string;
+  color?: string;
+  desc?: string;
+  expand?: { image?: ImageRecord };
+}
 
 const LEAFLET_HTML = `
 <!DOCTYPE html>
@@ -34,13 +51,12 @@ const LEAFLET_HTML = `
 <body>
   <div id="map"></div>
   <script>
-    var map = L.map('map').setView([64.5, 26.0], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const map = L.map('map').setView([64.5, 26.0], 5);
+    L.tileLayer('https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=O5UEYayzmhespubk3jjK', {
       maxZoom: 19,
-      attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    var gpsMarker = L.circleMarker([64.5, 26.0], {
+    const gpsMarker = L.circleMarker([64.5, 26.0], {
       radius: 10,
       color: '#fff',
       fillColor: '#3388ff',
@@ -48,25 +64,21 @@ const LEAFLET_HTML = `
       weight: 3
     }).addTo(map).bindPopup("Sijaintisi");
 
-    // clusters: key = "lat,lon" -> { marker, images: [] }
-    var clusters = {};
+    const clusters = {};
 
-    function clusterKey(lat, lon) {
-      return parseFloat(lat).toFixed(5) + ',' + parseFloat(lon).toFixed(5);
-    }
+    const clusterKey = (lat, lon) =>
+      parseFloat(lat).toFixed(5) + ',' + parseFloat(lon).toFixed(5);
 
-    function buildPopupHTML(images) {
-      var imgs = images.map(function(url) {
-        return '<img src="' + url + '" />';
-      }).join('');
-      var count = images.length > 1 ? '<div style="font-size:12px;color:#666;margin-bottom:6px;">' + images.length + ' kuvaa</div>' : '';
-      return '<div class="photo-popup"><div class="photo-gallery">' + count + imgs + '</div></div>';
-    }
-
-    function makeIcon(count) {
-      var badge = count > 1
-        ? '<div class="photo-count">' + count + '</div>'
+    const buildPopupHTML = (images) => {
+      const imgs = images.map(url => '<img src="' + url + '" />').join('');
+      const count = images.length > 1
+        ? '<div style="font-size:12px;color:#666;margin-bottom:6px;">' + images.length + ' kuvaa</div>'
         : '';
+      return '<div class="photo-popup"><div class="photo-gallery">' + count + imgs + '</div></div>';
+    };
+
+    const makeIcon = (count) => {
+      const badge = count > 1 ? '<div class="photo-count">' + count + '</div>' : '';
       return L.divIcon({
         html: '<div class="marker-wrap"><div style="background:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,0.35);">📷</div>' + badge + '</div>',
         iconSize: [36, 36],
@@ -74,43 +86,47 @@ const LEAFLET_HTML = `
         popupAnchor: [0, -38],
         className: ''
       });
-    }
+    };
 
-    function makeTaskIcon(iconName, color) {
-      return L.divIcon({
-        html: '<div style="background:' + (color || '#fff') + ';border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.35);"><ion-icon name="' + iconName + '" style="font-size:20px;color:#fff;"></ion-icon></div>',
-        iconSize: [36, 36],
-        iconAnchor: [18, 36],
-        popupAnchor: [0, -38],
-        className: ''
-      });
-    }
+    const makeTaskIcon = (iconName, color) => L.divIcon({
+      html: '<div style="background:' + (color || '#fff') + ';border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.35);"><ion-icon name="' + iconName + '" style="font-size:20px;color:#fff;"></ion-icon></div>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -38],
+      className: ''
+    });
 
-    function addTaskMarker(lat, lon, title, iconName, color, desc) {
-      var popupContent = '<b>' + title + '</b>';
+    const addTaskMarker = (lat, lon, title, iconName, color, desc, imageUrl) => {
+      let popupContent = '<b>' + title + '</b>';
       if (desc) popupContent += '<br><span style="font-size:13px;color:#555;">' + desc + '</span>';
+      if (imageUrl) popupContent += '<br><img src="' + imageUrl + '" style="width:200px;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px;" />';
       L.marker([lat, lon], { icon: makeTaskIcon(iconName || 'location', color || '#3388ff') })
         .addTo(map)
-        .bindPopup(popupContent);
-    }
+        .bindPopup(popupContent, { maxWidth: 240 });
+    };
 
-    function addPhotoToCluster(lat, lon, imageUrl) {
-      var key = clusterKey(lat, lon);
+    const addPhotoToCluster = (lat, lon, imageUrl) => {
+      const key = clusterKey(lat, lon);
       if (clusters[key]) {
         clusters[key].images.push(imageUrl);
         clusters[key].marker.setIcon(makeIcon(clusters[key].images.length));
         clusters[key].marker.setPopupContent(buildPopupHTML(clusters[key].images));
       } else {
-        var marker = L.marker([lat, lon], { icon: makeIcon(1) })
+        const marker = L.marker([lat, lon], { icon: makeIcon(1) })
           .addTo(map)
           .bindPopup(buildPopupHTML([imageUrl]), { maxWidth: 300 });
-        clusters[key] = { marker: marker, images: [imageUrl] };
+        clusters[key] = { marker, images: [imageUrl] };
       }
-    }
+    };
 
-    var firstLocation = true;
+    const clearMarkers = () => {
+      Object.values(clusters).forEach(c => map.removeLayer(c.marker));
+      Object.keys(clusters).forEach(k => delete clusters[k]);
+    };
 
-    function updateLocation(lat, lon) {
+    let firstLocation = true;
+
+    const updateLocation = (lat, lon) => {
       gpsMarker.setLatLng([lat, lon]);
       if (firstLocation) {
         map.setView([lat, lon], 15);
@@ -118,20 +134,19 @@ const LEAFLET_HTML = `
       }
     }
 
-    function centerOnUser() {
+    const centerOnUser = () => {
       map.setView(gpsMarker.getLatLng(), map.getZoom());
-    }
+    };
 
-    // Merkitään kartta valmiiksi vasta kun Leaflet on täysin alustettu
     window.mapReady = true;
 
-    function notifyReady() {
+    const notifyReady = () => {
       if (window.ReactNativeWebView && window.mapReady) {
         window.ReactNativeWebView.postMessage('ready');
       } else {
         setTimeout(notifyReady, 50);
       }
-    }
+    };
     setTimeout(notifyReady, 0);
   </script>
 </body>
@@ -166,37 +181,35 @@ export default function MapPage() {
 
   const loadMarkers = async () => {
     try {
-      console.log("Yritetään yhdistää:", pb.baseURL);
-      const records = await pb.collection("map_markers").getList(1, 500, {
-        sort: "-created",
-        expand: "image",
-      });
-      console.log("Löydettiin tietueita:", records.totalItems);
-      records.items.forEach((record) => {
-        const imageRecord = (record.expand as any)?.image;
-        if (imageRecord) {
+      const result = await pb
+        .collection("map_markers")
+        .getList<MapMarkerRecord>(1, 500, {
+          sort: "-created",
+          expand: "image",
+        });
+      result.items.forEach((record) => {
+        const imageRecord = record.expand?.image;
+        if (record.title) {
+          // Tehtävämarkkeri — kuva näytetään popupissa ikonin lisäksi
+          const icon = record.icon || "location";
+          const color = record.color || "#3388ff";
+          const desc = record.desc || "";
+          const imageUrl = imageRecord
+            ? pb.files.getURL(imageRecord, imageRecord.image)
+            : "";
+          webViewRef.current?.injectJavaScript(
+            `addTaskMarker(${record.lang}, ${record.long}, ${JSON.stringify(record.title)}, ${JSON.stringify(icon)}, ${JSON.stringify(color)}, ${JSON.stringify(desc)}, ${JSON.stringify(imageUrl)}); true;`,
+          );
+        } else if (imageRecord) {
           // Valokuvamarkkeri
-          const imageUrl = pb.files.getURL(
-            imageRecord,
-            imageRecord["image"] as string,
-          );
+          const imageUrl = pb.files.getURL(imageRecord, imageRecord.image);
           webViewRef.current?.injectJavaScript(
-            `addPhotoToCluster(${record["lang"]}, ${record["long"]}, "${imageUrl}"); true;`,
-          );
-        } else if (record["title"]) {
-          // Tehtävämarkkeri — hallitaan PocketBase-adminissa
-          const icon = (record["icon"] as string) || "location";
-          const color = (record["color"] as string) || "#3388ff";
-          const desc = (record["desc"] as string) || "";
-          webViewRef.current?.injectJavaScript(
-            `addTaskMarker(${record["lang"]}, ${record["long"]}, ${JSON.stringify(record["title"])}, ${JSON.stringify(icon)}, ${JSON.stringify(color)}, ${JSON.stringify(desc)}); true;`,
+            `addPhotoToCluster(${record.lang}, ${record.long}, "${imageUrl}"); true;`,
           );
         }
       });
-    } catch (e: any) {
+    } catch (e) {
       console.error("Markkereiden lataus epäonnistui:", e);
-      console.error("Status:", e?.status);
-      console.error("Viesti:", e?.message);
     }
   };
 
@@ -205,6 +218,13 @@ export default function MapPage() {
       loadMarkers();
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      webViewRef.current?.injectJavaScript("clearMarkers(); true;");
+      loadMarkers();
+    }, []),
+  );
 
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -240,19 +260,17 @@ export default function MapPage() {
         name: "photo.jpg",
         type: "image/jpeg",
       } as any);
-      const imageRecord = await pb.collection("images").create(imageFormData);
+      const imageRecord = await pb
+        .collection<ImageRecord>("images")
+        .create(imageFormData);
 
-      // 2. Luodaan markkeri joka viittaa kuvaan
-      const markerRecord = await pb.collection("map_markers").create({
+      await pb.collection("map_markers").create({
         lang: latitude,
         long: longitude,
         image: imageRecord.id,
       });
 
-      const imageUrl = pb.files.getURL(
-        imageRecord,
-        imageRecord["image"] as string,
-      );
+      const imageUrl = pb.files.getURL(imageRecord, imageRecord.image);
       webViewRef.current?.injectJavaScript(
         `addPhotoToCluster(${latitude}, ${longitude}, "${imageUrl}"); true;`,
       );
