@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {styles} from "../global";
 import Camera from "../pages/Camera";
 import MapPage from "../pages/map";
+import HappyNews from "../pages/HappyNews";
 
 const Tab = createBottomTabNavigator();
 
@@ -42,7 +43,7 @@ export default function NavBar() {
             />
             <Tab.Screen
                 name="Happy News"
-                component={Home}
+                component={HappyNews}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="happy" size={size} color={color} />
