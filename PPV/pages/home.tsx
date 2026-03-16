@@ -2,38 +2,45 @@ import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image } from 'react-native';
 import {styles} from "../global";
 import PocketBase from 'pocketbase';
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
+import {useFocusEffect} from "@react-navigation/native";
 
-const pb = new PocketBase('https://pocketbase.misteri.fi')
+const pb = new PocketBase("https://pocketbase.misteri.fi")
 
 export default function Home() {
 
-    const [token, setToken] = useState("");
+    const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        const login = async () => {
+        const fetchMessage = async () => {
             try {
-                const authData = await pb.collection("users")
-                    .authWithPassword('xcodeyt@gmail.com', 'xzD%ZVn3mQKIEB');
+                const first = await pb.collection('messages').getList(1, 1);
+                const total = first.totalItems;
 
-                console.log(pb.authStore.isValid);
-                console.log(pb.authStore.token);
+                const randomIndex = Math.floor(Math.random() * total);
 
-                setToken(pb.authStore.token);
+                const page = randomIndex + 1;
+                const result = await pb.collection('messages').getList(page, 1);
+
+                const randomMessage = result.items[0];
+
+                setMessage(randomMessage.msg);
             } catch (err) {
-                console.log("Login error:", err);
+                console.log("Error fetching positive message:", err);
             }
         };
 
-        login();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            fetchMessage();
+        }, [])
+    );
 
     return (
         
         <View style={styles.container}>
             <View style={styles.TextContainer}>
                 <Text style={styles.textStyle}>
-                    {pb.authStore.token.toString()}
+                    {message}
                 </Text>
             </View>
             <View style={styles.imageContainer}>
