@@ -13,6 +13,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { pb } from "../lib/pocketbase";
 import { styles } from "../global";
+import {LocationSubscription} from "expo-location";
 
 interface ImageRecord {
   id: string;
@@ -83,6 +84,7 @@ export default function MapPage() {
   const genRef = useRef(0);
   const [uploading, setUploading] = useState(false);
   const [tracking, setTracking] = useState(false);
+  const locationSub = useRef<LocationSubscription | null>(null);
 
   const run = (code: string) => webRef.current?.injectJavaScript(js(code));
 
@@ -98,24 +100,6 @@ export default function MapPage() {
       run(`setLikedIds(${S(ids)})`);
     }
   };
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-      Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: 1,
-          timeInterval: 1000,
-        },
-        (loc) => {
-          locRef.current = loc;
-          run(`updateLocation(${loc.coords.latitude},${loc.coords.longitude})`);
-        },
-      );
-    })();
-  }, []);
 
   const loadMarkers = async () => {
     try {
@@ -180,9 +164,30 @@ export default function MapPage() {
 
   useFocusEffect(
     useCallback(() => {
-      if (!ready.current) return;
-      run("clearMarkers()");
-      loadMarkers();
+      (async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") return;
+        locationSub.current = await Location.watchPositionAsync(
+            {
+              accuracy: Location.Accuracy.BestForNavigation,
+              distanceInterval: 1,
+              timeInterval: 1000,
+            },
+            (loc) => {
+              locRef.current = loc;
+              console.log("Location updated");
+              run(`updateLocation(${loc.coords.latitude},${loc.coords.longitude})`);
+            },
+        );
+      })();
+      if (ready.current) {
+        run("clearMarkers()");
+        loadMarkers();
+      }
+      return () => {
+        locationSub.current.remove();
+        locationSub.current = null;
+      };
     }, []),
   );
 
