@@ -10,6 +10,7 @@ import { WebView, WebViewMessageEvent } from "react-native-webview";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { pb } from "../lib/pocketbase";
 import { styles } from "../global";
 
@@ -17,7 +18,6 @@ interface ImageRecord {
   id: string;
   image: string;
 }
-
 interface MapMarkerRecord {
   id: string;
   lang: number;
@@ -30,191 +30,79 @@ interface MapMarkerRecord {
   expand?: { image?: ImageRecord };
 }
 
-const LEAFLET_HTML = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module" src="https://unpkg.com/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@7.4.0/dist/ionicons/ionicons.js"></script>
-  <style>
-    html, body, #map { height: 100%; margin: 0; padding: 0; }
-    .photo-popup { min-width: 280px; }
-    .photo-gallery { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; }
-    .photo-gallery img { width: 260px; max-height: 260px; object-fit: cover; border-radius: 10px; display: block; }
-    .photo-count { background:#3388ff; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; position:absolute; top:-4px; right:-4px; pointer-events:none; }
-    .marker-wrap { position:relative; width:36px; height:36px; }
-    .like-btn { background:none; border:1px solid #e0aab0; cursor:pointer; font-size:13px; color:#c0392b; padding:3px 10px; border-radius:12px; margin-top:6px; display:inline-block; }
-    .photo-entry { display:flex; flex-direction:column; align-items:flex-start; }
-  </style>
-</head>
-<body>
-  <div id="map"></div>
-  <script>
-    const map = L.map('map').setView([64.5, 26.0], 5);
-    L.tileLayer('https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=O5UEYayzmhespubk3jjK', {
-      maxZoom: 19,
-    }).addTo(map);
+const TILE_KEY = "O5UEYayzmhespubk3jjK";
+const LIKED_KEY = "ppv_liked_markers";
 
-    const gpsMarker = L.circleMarker([64.5, 26.0], {
-      radius: 10,
-      color: '#fff',
-      fillColor: '#3388ff',
-      fillOpacity: 1,
-      weight: 3
-    }).addTo(map).bindPopup("Sijaintisi");
+const LEAFLET_HTML = `<!DOCTYPE html><html><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+<script type="module" src="https://unpkg.com/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"><\/script>
+<style>
+html,body,#map{height:100%;margin:0;padding:0}
+.popup{min-width:280px} .gallery{display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto}
+.gallery img{width:260px;max-height:260px;object-fit:cover;border-radius:10px}
+.cnt{background:#3388ff;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;position:absolute;top:-4px;right:-4px;pointer-events:none}
+.mw{position:relative;width:36px;height:36px}
+.lbtn{background:none;border:1px solid #e0aab0;cursor:pointer;font-size:13px;color:#c0392b;padding:3px 10px;border-radius:12px;margin-top:6px;display:inline-block;transition:background .2s}
+.lbtn.on{background:#fde8e8;border-color:#c0392b}
+.cbtn{background:none;border:1px solid #8bc34a;cursor:pointer;font-size:13px;color:#388e3c;padding:3px 10px;border-radius:12px;margin-top:6px;display:inline-block;transition:background .2s}
+.cbtn.on{background:#e8f5e9;border-color:#388e3c}
+.pe{display:flex;flex-direction:column;align-items:flex-start}
+</style></head><body><div id="map"></div><script>
+var map=L.map('map').setView([64.5,26],5),msg=function(s){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(s)};
+L.tileLayer('https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${TILE_KEY}',{maxZoom:19}).addTo(map);
+var gps=L.circleMarker([64.5,26],{radius:10,color:'#fff',fillColor:'#3388ff',fillOpacity:1,weight:3}).addTo(map).bindPopup("Sijaintisi");
+var C={},T={},liked=new Set(),fl=true,tr=false;
+var ck=function(a,b){return parseFloat(a).toFixed(5)+','+parseFloat(b).toFixed(5)};
+document.addEventListener('click',function(ev){var btn=ev.target.closest('[data-toggle]');if(btn){var id=btn.getAttribute('data-toggle');msg((liked.has(id)?'unlike:':'like:')+id)}});
+var photoHTML=function(e){var l=liked.has(e.markerId),c=l?'lbtn on':'lbtn',h=l?'\\u2764\\ufe0f':'\\u2661';return'<img src="'+e.imageUrl+'"/><button class="'+c+'" data-toggle="'+e.markerId+'">'+h+' '+e.likes+'</button>'};
+var galleryHTML=function(a){var n=a.length>1?'<div style="font-size:12px;color:#666;margin-bottom:6px">'+a.length+' kuvaa</div>':'';return'<div class="popup"><div class="gallery">'+n+a.map(function(e){return'<div class="pe">'+photoHTML(e)+'</div>'}).join('')+'</div></div>'};
+var taskHTML=function(t,d,img,id,lk){var h='<b>'+t+'</b>';if(d)h+='<br><span style="font-size:13px;color:#555">'+d+'</span>';if(img)h+='<br><img src="'+img+'" style="width:200px;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px"/>';var l=liked.has(id),c=l?'cbtn on':'cbtn',ch=l?'\\u2705':'\\u2b1c',lb=l?'Tehty':'Merkkaa tehdyksi';h+='<br><button class="'+c+'" data-toggle="'+id+'">'+ch+' '+lb+'</button>';return h};
+var mkI=function(n){var b=n>1?'<div class="cnt">'+n+'</div>':'';return L.divIcon({html:'<div class="mw"><div style="background:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.35)">\\ud83d\\udcf7</div>'+b+'</div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''})};
+var mkT=function(ic,co){return L.divIcon({html:'<div style="background:'+(co||'#fff')+';border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)"><ion-icon name="'+ic+'" style="font-size:20px;color:#fff"></ion-icon></div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''})};
+var addTaskMarker=function(la,lo,t,ic,co,d,img,id,lk){var m=L.marker([la,lo],{icon:mkT(ic||'location',co||'#3388ff')}).addTo(map).bindPopup(taskHTML(t,d,img,id,lk),{maxWidth:240});T[id]={marker:m,t:t,d:d,img:img,lk:lk}};
+var addPhotoToCluster=function(la,lo,url,id,lk){var k=ck(la,lo),e={imageUrl:url,markerId:id,likes:lk};if(C[k]){C[k].entries.push(e);C[k].marker.setIcon(mkI(C[k].entries.length));C[k].marker.setPopupContent(galleryHTML(C[k].entries))}else{var m=L.marker([la,lo],{icon:mkI(1)}).addTo(map).bindPopup(galleryHTML([e]),{maxWidth:300});C[k]={marker:m,entries:[e]}}};
+var clearMarkers=function(){for(var k in C)map.removeLayer(C[k].marker),delete C[k];for(var k in T)map.removeLayer(T[k].marker),delete T[k]};
+var setLikedIds=function(ids){liked=new Set(ids)};
+var updateLikes=function(id,n,on){if(on)liked.add(id);else liked.delete(id);if(T[id]){T[id].lk=n;T[id].marker.setPopupContent(taskHTML(T[id].t,T[id].d,T[id].img,id,n));return}for(var k in C){var e=C[k].entries.find(function(x){return x.markerId===id});if(e){e.likes=n;C[k].marker.setPopupContent(galleryHTML(C[k].entries));return}}};
+var updateLocation=function(la,lo){gps.setLatLng([la,lo]);if(fl){map.setView([la,lo],15);fl=false}else if(tr)map.panTo([la,lo])};
+var centerOnUser=function(){tr=true;map.setView(gps.getLatLng(),16)};
+map.on('dragstart',function(){if(tr){tr=false;msg('unlock')}});
+(function nr(){window.ReactNativeWebView?msg('ready'):setTimeout(nr,50)})();
+<\/script></body></html>`;
 
-    const clusters = {};
-    const taskMarkers = {};
-
-    const clusterKey = (lat, lon) =>
-      parseFloat(lat).toFixed(5) + ',' + parseFloat(lon).toFixed(5);
-
-    const sendLike = (markerId) => {
-      window.ReactNativeWebView && window.ReactNativeWebView.postMessage('like:' + markerId);
-    };
-
-    const buildPhotoEntryHTML = (entry) =>
-      '<img src="' + entry.imageUrl + '" />' +
-      '<button class="like-btn" onclick="sendLike(\\'' + entry.markerId + '\\')">\u2764\ufe0f ' + entry.likes + '</button>';
-
-    const buildPopupHTML = (entries) => {
-      const count = entries.length > 1
-        ? '<div style="font-size:12px;color:#666;margin-bottom:6px;">' + entries.length + ' kuvaa</div>'
-        : '';
-      const items = entries.map(e => '<div class="photo-entry">' + buildPhotoEntryHTML(e) + '</div>').join('');
-      return '<div class="photo-popup"><div class="photo-gallery">' + count + items + '</div></div>';
-    };
-
-    const buildTaskPopupHTML = (title, desc, imageUrl, markerId, likes) => {
-      let html = '<b>' + title + '</b>';
-      if (desc) html += '<br><span style="font-size:13px;color:#555;">' + desc + '</span>';
-      if (imageUrl) html += '<br><img src="' + imageUrl + '" style="width:200px;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px;" />';
-      html += '<br><button class="like-btn" onclick="sendLike(\\'' + markerId + '\\')">\u2764\ufe0f ' + likes + '</button>';
-      return html;
-    };
-
-    const makeIcon = (count) => {
-      const badge = count > 1 ? '<div class="photo-count">' + count + '</div>' : '';
-      return L.divIcon({
-        html: '<div class="marker-wrap"><div style="background:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,0.35);">📷</div>' + badge + '</div>',
-        iconSize: [36, 36],
-        iconAnchor: [18, 36],
-        popupAnchor: [0, -38],
-        className: ''
-      });
-    };
-
-    const makeTaskIcon = (iconName, color) => L.divIcon({
-      html: '<div style="background:' + (color || '#fff') + ';border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.35);"><ion-icon name="' + iconName + '" style="font-size:20px;color:#fff;"></ion-icon></div>',
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -38],
-      className: ''
-    });
-
-    const addTaskMarker = (lat, lon, title, iconName, color, desc, imageUrl, markerId, likes) => {
-      const marker = L.marker([lat, lon], { icon: makeTaskIcon(iconName || 'location', color || '#3388ff') })
-        .addTo(map)
-        .bindPopup(buildTaskPopupHTML(title, desc, imageUrl, markerId, likes), { maxWidth: 240 });
-      taskMarkers[markerId] = { marker, title, desc, imageUrl, likes };
-    };
-
-    const addPhotoToCluster = (lat, lon, imageUrl, markerId, likes) => {
-      const key = clusterKey(lat, lon);
-      const entry = { imageUrl, markerId, likes };
-      if (clusters[key]) {
-        clusters[key].entries.push(entry);
-        clusters[key].marker.setIcon(makeIcon(clusters[key].entries.length));
-        clusters[key].marker.setPopupContent(buildPopupHTML(clusters[key].entries));
-      } else {
-        const marker = L.marker([lat, lon], { icon: makeIcon(1) })
-          .addTo(map)
-          .bindPopup(buildPopupHTML([entry]), { maxWidth: 300 });
-        clusters[key] = { marker, entries: [entry] };
-      }
-    };
-
-    const clearMarkers = () => {
-      Object.values(clusters).forEach(c => map.removeLayer(c.marker));
-      Object.keys(clusters).forEach(k => delete clusters[k]);
-      Object.values(taskMarkers).forEach(m => map.removeLayer(m.marker));
-      Object.keys(taskMarkers).forEach(k => delete taskMarkers[k]);
-    };
-
-    const updateLikes = (markerId, newCount) => {
-      if (taskMarkers[markerId]) {
-        const m = taskMarkers[markerId];
-        m.likes = newCount;
-        m.marker.setPopupContent(buildTaskPopupHTML(m.title, m.desc, m.imageUrl, markerId, newCount));
-        return;
-      }
-      for (const key in clusters) {
-        const entry = clusters[key].entries.find(e => e.markerId === markerId);
-        if (entry) {
-          entry.likes = newCount;
-          clusters[key].marker.setPopupContent(buildPopupHTML(clusters[key].entries));
-          return;
-        }
-      }
-    };
-
-    let firstLocation = true;
-    let tracking = false;
-
-    const updateLocation = (lat, lon) => {
-      gpsMarker.setLatLng([lat, lon]);
-      if (firstLocation) {
-        map.setView([lat, lon], 15);
-        firstLocation = false;
-      } else if (tracking) {
-        map.panTo([lat, lon]);
-      }
-    }
-
-    const centerOnUser = () => {
-      tracking = true;
-      map.setView(gpsMarker.getLatLng(), 16);
-    };
-
-    map.on('dragstart', () => {
-      if (tracking) {
-        tracking = false;
-        window.ReactNativeWebView && window.ReactNativeWebView.postMessage('unlock');
-      }
-    });
-
-    window.mapReady = true;
-
-    const notifyReady = () => {
-      if (window.ReactNativeWebView && window.mapReady) {
-        window.ReactNativeWebView.postMessage('ready');
-      } else {
-        setTimeout(notifyReady, 50);
-      }
-    };
-    setTimeout(notifyReady, 0);
-  </script>
-</body>
-</html>
-`;
+const js = (code: string) => `${code}; true;`;
+const S = JSON.stringify;
 
 export default function MapPage() {
-  const webViewRef = useRef<WebView>(null);
-  const locationRef = useRef<Location.LocationObject | null>(null);
-  const likedMarkers = useRef<Set<string>>(new Set());
-  const isMapReady = useRef(false);
+  const webRef = useRef<WebView>(null);
+  const locRef = useRef<Location.LocationObject | null>(null);
+  const liked = useRef<Set<string>>(new Set());
+  const ready = useRef(false);
+  const genRef = useRef(0);
   const [uploading, setUploading] = useState(false);
   const [tracking, setTracking] = useState(false);
+
+  const run = (code: string) => webRef.current?.injectJavaScript(js(code));
+
+  const saveLiked = async () => {
+    await AsyncStorage.setItem(LIKED_KEY, JSON.stringify([...liked.current]));
+  };
+
+  const loadLiked = async () => {
+    const raw = await AsyncStorage.getItem(LIKED_KEY);
+    if (raw) {
+      const ids: string[] = JSON.parse(raw);
+      liked.current = new Set(ids);
+      run(`setLikedIds(${S(ids)})`);
+    }
+  };
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return;
-
       Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
@@ -222,10 +110,8 @@ export default function MapPage() {
           timeInterval: 1000,
         },
         (loc) => {
-          locationRef.current = loc;
-          webViewRef.current?.injectJavaScript(
-            `updateLocation(${loc.coords.latitude}, ${loc.coords.longitude}); true;`,
-          );
+          locRef.current = loc;
+          run(`updateLocation(${loc.coords.latitude},${loc.coords.longitude})`);
         },
       );
     })();
@@ -233,30 +119,23 @@ export default function MapPage() {
 
   const loadMarkers = async () => {
     try {
-      const result = await pb
+      await loadLiked();
+      const { items } = await pb
         .collection("map_markers")
         .getList<MapMarkerRecord>(1, 500, {
           sort: "-created",
           expand: "image",
         });
-      result.items.forEach((record) => {
-        const imageRecord = record.expand?.image;
-        if (record.title) {
-          // Tehtävämarkkeri — kuva näytetään popupissa ikonin lisäksi
-          const icon = record.icon || "location";
-          const color = record.color || "#3388ff";
-          const desc = record.desc || "";
-          const imageUrl = imageRecord
-            ? pb.files.getURL(imageRecord, imageRecord.image)
-            : "";
-          webViewRef.current?.injectJavaScript(
-            `addTaskMarker(${record.lang}, ${record.long}, ${JSON.stringify(record.title)}, ${JSON.stringify(icon)}, ${JSON.stringify(color)}, ${JSON.stringify(desc)}, ${JSON.stringify(imageUrl)}, ${JSON.stringify(record.id)}, ${record.likes ?? 0}); true;`,
+      items.forEach((r) => {
+        const img = r.expand?.image;
+        const url = img ? pb.files.getURL(img, img.image) : "";
+        if (r.title) {
+          run(
+            `addTaskMarker(${r.lang},${r.long},${S(r.title)},${S(r.icon || "location")},${S(r.color || "#3388ff")},${S(r.desc || "")},${S(url)},${S(r.id)},${r.likes ?? 0})`,
           );
-        } else if (imageRecord) {
-          // Valokuvamarkkeri
-          const imageUrl = pb.files.getURL(imageRecord, imageRecord.image);
-          webViewRef.current?.injectJavaScript(
-            `addPhotoToCluster(${record.lang}, ${record.long}, ${JSON.stringify(imageUrl)}, ${JSON.stringify(record.id)}, ${record.likes ?? 0}); true;`,
+        } else if (img) {
+          run(
+            `addPhotoToCluster(${r.lang},${r.long},${S(url)},${S(r.id)},${r.likes ?? 0})`,
           );
         }
       });
@@ -265,149 +144,123 @@ export default function MapPage() {
     }
   };
 
-  const handleWebViewMessage = (event: WebViewMessageEvent) => {
-    const data = event.nativeEvent.data;
-    if (data === "ready") {
-      isMapReady.current = true;
+  const handleToggle = (markerId: string, isLike: boolean) => {
+    const delta = isLike ? 1 : -1;
+    if (isLike) liked.current.add(markerId);
+    else liked.current.delete(markerId);
+    saveLiked();
+    pb.collection("map_markers")
+      .getOne(markerId)
+      .then((rec) => {
+        const n = Math.max(0, ((rec.likes as number) ?? 0) + delta);
+        return pb
+          .collection("map_markers")
+          .update(markerId, { likes: n })
+          .then(() => n);
+      })
+      .then((n) => run(`updateLikes(${S(markerId)},${n},${isLike})`))
+      .catch((e) => {
+        if (isLike) liked.current.delete(markerId);
+        else liked.current.add(markerId);
+        saveLiked();
+        console.error("Tykkäys epäonnistui:", e);
+      });
+  };
+
+  const onMessage = (e: WebViewMessageEvent) => {
+    const d = e.nativeEvent.data;
+    if (d === "ready") {
+      ready.current = true;
+      run("clearMarkers()");
       loadMarkers();
-    } else if (data === "unlock") {
-      setTracking(false);
-    } else if (data.startsWith("like:")) {
-      const markerId = data.slice(5);
-      if (likedMarkers.current.has(markerId)) return;
-      likedMarkers.current.add(markerId);
-      pb.collection("map_markers")
-        .getOne(markerId)
-        .then((record) => {
-          const newLikes = ((record.likes as number) ?? 0) + 1;
-          return pb
-            .collection("map_markers")
-            .update(markerId, { likes: newLikes })
-            .then(() => newLikes);
-        })
-        .then((newLikes) => {
-          webViewRef.current?.injectJavaScript(
-            `updateLikes(${JSON.stringify(markerId)}, ${newLikes}); true;`,
-          );
-        })
-        .catch((e) => {
-          likedMarkers.current.delete(markerId);
-          console.error("Tykkäys epäonnistui:", e);
-        });
-    }
+    } else if (d === "unlock") setTracking(false);
+    else if (d.startsWith("like:")) handleToggle(d.slice(5), true);
+    else if (d.startsWith("unlike:")) handleToggle(d.slice(7), false);
   };
 
   useFocusEffect(
     useCallback(() => {
-      if (!isMapReady.current) return;
-      webViewRef.current?.injectJavaScript("clearMarkers(); true;");
+      if (!ready.current) return;
+      run("clearMarkers()");
       loadMarkers();
     }, []),
   );
 
   const uploadPhoto = async (uri: string) => {
-    if (!locationRef.current) {
+    if (!locRef.current) {
       Alert.alert("Sijainti puuttuu", "Odota hetki kunnes sijainti on saatu.");
       return;
     }
-
     setUploading(true);
     try {
-      const { latitude, longitude } = locationRef.current.coords;
-
-      const imageFormData = new FormData();
-      imageFormData.append("image", {
-        uri,
-        name: "photo.jpg",
-        type: "image/jpeg",
-      } as any);
-      const imageRecord = await pb
-        .collection<ImageRecord>("images")
-        .create(imageFormData);
-
-      const markerRecord = await pb.collection("map_markers").create({
-        lang: latitude,
-        long: longitude,
-        image: imageRecord.id,
-      });
-
-      const imageUrl = pb.files.getURL(imageRecord, imageRecord.image);
-      webViewRef.current?.injectJavaScript(
-        `addPhotoToCluster(${latitude}, ${longitude}, ${JSON.stringify(imageUrl)}, ${JSON.stringify(markerRecord.id)}, 0); true;`,
+      const { latitude: la, longitude: lo } = locRef.current.coords;
+      const fd = new FormData();
+      fd.append("image", { uri, name: "photo.jpg", type: "image/jpeg" } as any);
+      const img = await pb.collection<ImageRecord>("images").create(fd);
+      const rec = await pb
+        .collection("map_markers")
+        .create({ lang: la, long: lo, image: img.id });
+      run(
+        `addPhotoToCluster(${la},${lo},${S(pb.files.getURL(img, img.image))},${S(rec.id)},0)`,
       );
-    } catch (e) {
-      Alert.alert("Virhe", "Kuvan tallennus epäonnistui. Tarkista yhteys.");
-      console.error(e);
+    } catch {
+      Alert.alert("Virhe", "Kuvan tallennus epäonnistui.");
     } finally {
       setUploading(false);
     }
   };
 
-  const takePhoto = async () => {
-    Alert.alert("Lisää kuva", "Valitse lähde", [
-      {
-        text: "Kamera",
-        onPress: async () => {
-          const { status } = await ImagePicker.requestCameraPermissionsAsync();
-          if (status !== "granted") {
-            Alert.alert(
-              "Lupa vaaditaan",
-              "Anna sovellukselle kameralupa asetuksista.",
-            );
-            return;
-          }
-          const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ["images"],
-            quality: 0.7,
-          });
-          if (!result.canceled) await uploadPhoto(result.assets[0].uri);
-        },
-      },
-      {
-        text: "Galleria",
-        onPress: async () => {
-          const { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (status !== "granted") {
-            Alert.alert(
-              "Lupa vaaditaan",
-              "Anna sovellukselle gallerian käyttölupa asetuksista.",
-            );
-            return;
-          }
-          const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ["images"],
-            quality: 0.7,
-          });
-          if (!result.canceled) await uploadPhoto(result.assets[0].uri);
-        },
-      },
-      { text: "Peruuta", style: "cancel" },
-    ]);
+  const pickImage = async (fromCamera: boolean) => {
+    const perm = fromCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (perm.status !== "granted") {
+      Alert.alert("Lupa vaaditaan");
+      return;
+    }
+    const result = fromCamera
+      ? await ImagePicker.launchCameraAsync({
+          mediaTypes: ["images"],
+          quality: 0.7,
+        })
+      : await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ["images"],
+          quality: 0.7,
+        });
+    if (!result.canceled) await uploadPhoto(result.assets[0].uri);
   };
 
   return (
     <View style={styles.mapContainer}>
       <WebView
-        ref={webViewRef}
+        ref={webRef}
         source={{ html: LEAFLET_HTML, baseUrl: "https://unpkg.com" }}
         style={styles.map}
         originWhitelist={["*"]}
         mixedContentMode="always"
-        onMessage={handleWebViewMessage}
+        onMessage={onMessage}
+        onLoadStart={() => {
+          ready.current = false;
+        }}
       />
       <TouchableOpacity
         style={[styles.locateButton, tracking && styles.locateButtonActive]}
         onPress={() => {
           setTracking(true);
-          webViewRef.current?.injectJavaScript("centerOnUser(); true;");
+          run("centerOnUser()");
         }}
       >
         <Text style={styles.locateIcon}>📍</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.cameraButton, uploading && styles.cameraButtonDisabled]}
-        onPress={takePhoto}
+        onPress={() =>
+          Alert.alert("Lisää kuva", "Valitse lähde", [
+            { text: "Kamera", onPress: () => pickImage(true) },
+            { text: "Galleria", onPress: () => pickImage(false) },
+            { text: "Peruuta", style: "cancel" },
+          ])
+        }
         disabled={uploading}
       >
         {uploading ? (
