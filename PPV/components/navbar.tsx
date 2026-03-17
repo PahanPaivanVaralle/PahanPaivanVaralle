@@ -13,6 +13,7 @@ export default function NavBar() {
         <Tab.Navigator screenOptions={{
             tabBarActiveTintColor: "black",
             tabBarInactiveTintColor: "#E4ACEA",
+            lazy: true,
         }}>
             <Tab.Screen
                 name="Home"

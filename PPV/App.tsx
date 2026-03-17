@@ -14,7 +14,10 @@ const MyTheme = {
 };
 function RootStack() {
   return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{
+          headerShown: false,
+          freezeOnBlur: true,
+      }}>
           <Stack.Screen name="Tabs" component={NavBar} />
       </Stack.Navigator>
   );
