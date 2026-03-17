@@ -60,7 +60,6 @@ export default function HappyNews() {
               const text = await res.text();
               const feed = await parse(text);
 
-              // 🔥 FILTER IMMEDIATELY HERE
               return feed.items
                   //.slice(1, 4)
                   .filter(item => {
