@@ -1,40 +1,13 @@
 import { StatusBar } from "expo-status-bar";
-import { Text, View, Image, Animated } from "react-native";
+import {Text, View, Image, Animated, Linking} from "react-native";
 import { styles } from "../global";
 import { useEffect, useState } from "react";
-import * as RSSParser from "react-native-rss-parser";
+import {parse, FeedItem, Feed} from "react-native-rss-parser";
 import ScrollView = Animated.ScrollView;
 
 export default function HappyNews() {
-  const [news, setNews] = useState([]);
+  const [news, setNews] = useState([] as FeedItem[]);
 
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const sources = [
-          "https://www.iltalehti.fi/rss.xml",
-          "https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_UUTISET.rss",
-        ];
-
-        const responses = await Promise.all(sources.map((url) => fetch(url)));
-
-        const texts = await Promise.all(responses.map((res) => res.text()));
-
-        const feeds = await Promise.all(
-          texts.map((text) => RSSParser.parse(text)),
-        );
-
-        const allNews = feeds.flatMap((feed) => feed.items);
-
-        console.log(allNews);
-        setNews(allNews);
-      } catch (err) {
-        console.log("News error:", err);
-      }
-    };
-
-    fetchNews();
-  }, []);
   const negativeWords = [
     "trump",
     "sota",
@@ -67,20 +40,50 @@ export default function HappyNews() {
     "Israel",
     "räjähti",
     "räjähdys",
+    "uhkaus",
+    "kuollut",
+    "oikeuteen",
+    "hengenvaara",
   ];
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const sources = [
+          //"https://www.iltalehti.fi/rss.xml",
+          "https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_UUTISET.rss",
+        ];
+
+        const feeds = await Promise.all(
+            sources.map(async (url) => {
+              const res = await fetch(url);
+              const text = await res.text();
+              const feed = await parse(text);
+
+              // 🔥 FILTER IMMEDIATELY HERE
+              return feed.items
+                  //.slice(1, 4)
+                  .filter(item => {
+                    return !negativeWords.some(word => item.title.toLowerCase().includes(word));
+                  })
+            }));
+                setNews(feeds.flat());
+        console.log(String(news.some(url => url.links.some(url => url.url))));
+      } catch (err) {
+        console.log("News error:", err);
+      }
+    };
+
+    fetchNews();
+  }, []);
 
   return (
     <ScrollView>
       {news
-        .filter(
-          (singlenews) =>
-            !negativeWords.some((word) =>
-              singlenews.title.toLowerCase().includes(word),
-            ),
-        )
-        .map((singlenews) => (
-          <Text key={singlenews.title} style={styles.TextContainer}>
-            {singlenews.title}
+        .map((singleArticle) => (
+          <Text key={singleArticle.title} style={styles.TextContainer}
+                onPress={() => Linking.openURL(String(singleArticle.links.some(url => url.url)))}>
+            {singleArticle.title}
           </Text>
         ))}
     </ScrollView>
