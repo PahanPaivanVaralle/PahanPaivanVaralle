@@ -2,7 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, ImageBackground, ScrollView } from 'react-native';
 import { styles } from "../global";
 import PocketBase from 'pocketbase';
-import { useEffect, useState } from "react";
 
 import {useCallback, useEffect, useState} from "react";
 import {useFocusEffect} from "@react-navigation/native";
@@ -31,8 +30,6 @@ export default function Home() {
                 console.log("Error fetching positive message:", err);
             }
         };
-        login();
-    }, []);
     
         useFocusEffect(
         useCallback(() => {
@@ -47,7 +44,7 @@ export default function Home() {
                 <View style={styles.container}>
                     <View style={styles.TextContainer}>
                         <Text style={styles.textStyle}>
-                            {pb.authStore.token.toString()}
+                            {message}
                         </Text>
                     </View>
 
