@@ -46,16 +46,18 @@ export const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
-  buttonContainer: {
+  CameraButtons: {
     position: "absolute",
-    bottom: 50,
+    flexDirection: "row",
+    bottom: 25,
     alignSelf: "center",
+    gap: 50,
   },
   captureButton: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "white",
+    backgroundColor: "pink",
     borderWidth: 5,
     borderColor: "gray",
   },
