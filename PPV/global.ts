@@ -15,8 +15,12 @@ export const styles = StyleSheet.create({
         justifyContent: "flex-start", 
         alignItems: "center",    
         paddingTop: 50,
-
     },
+
+    mapContainer: {
+        flex: 1,
+    },
+
     TextContainer: {
         marginTop: 50,
         alignSelf: 'center',
@@ -103,11 +107,6 @@ export const styles = StyleSheet.create({
     map: {
         flex: 1,
     }, // värit taustalle #B5DACE, #ECC0D1
-  buttonContainer: {
-    position: "absolute",
-    bottom: 50,
-    alignSelf: "center",
-  },
   cameraButton: {
     position: "absolute",
     bottom: 40,
