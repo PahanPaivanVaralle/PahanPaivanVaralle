@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
   View,
   TouchableOpacity,
   Text,
@@ -12,6 +11,7 @@ import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import { useFocusEffect } from "@react-navigation/native";
 import { pb } from "../lib/pocketbase";
+import { styles } from "../global";
 
 interface ImageRecord {
   id: string;
@@ -125,18 +125,29 @@ const LEAFLET_HTML = `
     };
 
     let firstLocation = true;
+    let tracking = false;
 
     const updateLocation = (lat, lon) => {
       gpsMarker.setLatLng([lat, lon]);
       if (firstLocation) {
         map.setView([lat, lon], 15);
         firstLocation = false;
+      } else if (tracking) {
+        map.panTo([lat, lon]);
       }
     }
 
     const centerOnUser = () => {
+      tracking = true;
       map.setView(gpsMarker.getLatLng(), map.getZoom());
     };
+
+    map.on('dragstart', () => {
+      if (tracking) {
+        tracking = false;
+        window.ReactNativeWebView && window.ReactNativeWebView.postMessage('unlock');
+      }
+    });
 
     window.mapReady = true;
 
@@ -157,6 +168,7 @@ export default function MapPage() {
   const webViewRef = useRef<WebView>(null);
   const locationRef = useRef<Location.LocationObject | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -216,6 +228,8 @@ export default function MapPage() {
   const handleWebViewMessage = (event: WebViewMessageEvent) => {
     if (event.nativeEvent.data === "ready") {
       loadMarkers();
+    } else if (event.nativeEvent.data === "unlock") {
+      setTracking(false);
     }
   };
 
@@ -226,23 +240,7 @@ export default function MapPage() {
     }, []),
   );
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Lupa vaaditaan",
-        "Anna sovellukselle kameralupa asetuksista.",
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ["images"],
-      quality: 0.7,
-    });
-
-    if (result.canceled) return;
-
+  const uploadPhoto = async (uri: string) => {
     if (!locationRef.current) {
       Alert.alert("Sijainti puuttuu", "Odota hetki kunnes sijainti on saatu.");
       return;
@@ -250,13 +248,11 @@ export default function MapPage() {
 
     setUploading(true);
     try {
-      const photo = result.assets[0];
       const { latitude, longitude } = locationRef.current.coords;
 
-      // 1. Tallennetaan kuva images-collectioniin
       const imageFormData = new FormData();
       imageFormData.append("image", {
-        uri: photo.uri,
+        uri,
         name: "photo.jpg",
         type: "image/jpeg",
       } as any);
@@ -282,6 +278,49 @@ export default function MapPage() {
     }
   };
 
+  const takePhoto = async () => {
+    Alert.alert("Lisää kuva", "Valitse lähde", [
+      {
+        text: "Kamera",
+        onPress: async () => {
+          const { status } = await ImagePicker.requestCameraPermissionsAsync();
+          if (status !== "granted") {
+            Alert.alert(
+              "Lupa vaaditaan",
+              "Anna sovellukselle kameralupa asetuksista.",
+            );
+            return;
+          }
+          const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ["images"],
+            quality: 0.7,
+          });
+          if (!result.canceled) await uploadPhoto(result.assets[0].uri);
+        },
+      },
+      {
+        text: "Galleria",
+        onPress: async () => {
+          const { status } =
+            await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (status !== "granted") {
+            Alert.alert(
+              "Lupa vaaditaan",
+              "Anna sovellukselle gallerian käyttölupa asetuksista.",
+            );
+            return;
+          }
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            quality: 0.7,
+          });
+          if (!result.canceled) await uploadPhoto(result.assets[0].uri);
+        },
+      },
+      { text: "Peruuta", style: "cancel" },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <WebView
@@ -293,10 +332,11 @@ export default function MapPage() {
         onMessage={handleWebViewMessage}
       />
       <TouchableOpacity
-        style={styles.locateButton}
-        onPress={() =>
-          webViewRef.current?.injectJavaScript("centerOnUser(); true;")
-        }
+        style={[styles.locateButton, tracking && styles.locateButtonActive]}
+        onPress={() => {
+          setTracking(true);
+          webViewRef.current?.injectJavaScript("centerOnUser(); true;");
+        }}
       >
         <Text style={styles.locateIcon}>📍</Text>
       </TouchableOpacity>
@@ -314,53 +354,3 @@ export default function MapPage() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
-  cameraButton: {
-    position: "absolute",
-    bottom: 40,
-    right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#3388ff",
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  cameraButtonDisabled: {
-    backgroundColor: "#9e9e9e",
-  },
-  cameraIcon: {
-    fontSize: 26,
-  },
-  locateButton: {
-    position: "absolute",
-    bottom: 116,
-    right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  locateIcon: {
-    fontSize: 26,
-  },
-});
