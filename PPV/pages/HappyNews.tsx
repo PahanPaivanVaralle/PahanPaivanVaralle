@@ -1,85 +1,88 @@
-import { StatusBar } from 'expo-status-bar';
-import {Text, View, Image, Animated} from 'react-native';
-import {styles} from "../global";
-import {useEffect, useState} from "react";
-import * as RSSParser from 'react-native-rss-parser';
+import { StatusBar } from "expo-status-bar";
+import { Text, View, Image, Animated } from "react-native";
+import { styles } from "../global";
+import { useEffect, useState } from "react";
+import * as RSSParser from "react-native-rss-parser";
 import ScrollView = Animated.ScrollView;
 
 export default function HappyNews() {
+  const [news, setNews] = useState([]);
 
-    const [news, setNews] = useState([]);
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const sources = [
+          "https://www.iltalehti.fi/rss.xml",
+          "https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_UUTISET.rss",
+        ];
 
-    useEffect(() => {
-        const fetchNews = async () => {
-            try {
+        const responses = await Promise.all(sources.map((url) => fetch(url)));
 
-                const sources = [
-                    "https://www.iltalehti.fi/rss.xml",
-                    "https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_UUTISET.rss",
-                ];
+        const texts = await Promise.all(responses.map((res) => res.text()));
 
-                const responses = await Promise.all(
-                    sources.map(url => fetch(url))
-                );
+        const feeds = await Promise.all(
+          texts.map((text) => RSSParser.parse(text)),
+        );
 
-                const texts = await Promise.all(
-                    responses.map(res => res.text())
-                );
+        const allNews = feeds.flatMap((feed) => feed.items);
 
-                const feeds = await Promise.all(
-                    texts.map(text => RSSParser.parse(text))
-                );
+        console.log(allNews);
+        setNews(allNews);
+      } catch (err) {
+        console.log("News error:", err);
+      }
+    };
 
-                const allNews = feeds.flatMap(feed => feed.items);
+    fetchNews();
+  }, []);
+  const negativeWords = [
+    "trump",
+    "sota",
+    "venäjä",
+    "putin",
+    "moka",
+    "varoittaa",
+    "kaatui",
+    "epäilty",
+    "rikos",
+    "hinnat",
+    "pilaa",
+    "ostaa",
+    "petti",
+    "tekoäly",
+    "AI",
+    "ongelmia",
+    "vankila",
+    "nato",
+    "ahdistuneita",
+    "epidemia",
+    "verilöyly",
+    "onnettomuus",
+    "uhri",
+    "loukkaantui",
+    "hukkui",
+    "nordea",
+    "Iran",
+    "korruptio",
+    "Israel",
+    "räjähti",
+    "räjähdys",
+  ];
 
-                console.log(allNews);
-                setNews(allNews);
-
-            } catch (err) {
-                console.log("News error:", err);
-            }
-        };
-
-        fetchNews();
-    }, []);
-    const negativeWords = [
-        "trump",
-        "sota",
-        "venäjä",
-        "putin",
-        "moka",
-        "varoittaa",
-        "kaatui",
-        "epäilty",
-        "rikos",
-        "hinnat",
-        "pilaa",
-        "ostaa",
-        "petti",
-        "tekoäly",
-        "AI",
-        "ongelmia",
-        "vankila",
-        "nato",
-        "ahdistuneita",
-        "epidemia",
-        "verilöyly",
-    ];
-
-    return (
-        <ScrollView>
-            {news
-                .filter(singlenews =>
-                    !negativeWords.some(word =>
-                        singlenews.title.toLowerCase().includes(word)
-                    )
-                )
-                .map(singlenews => (
-                    <Text key={singlenews.title} style={styles.TextContainer}>
-                        {singlenews.title}
-                    </Text>
-                ))
-            }
-        </ScrollView>
-    );
+  return (
+    <ScrollView>
+      {news
+        .filter(
+          (singlenews) =>
+            !negativeWords.some((word) =>
+              singlenews.title.toLowerCase().includes(word),
+            ),
+        )
+        .map((singlenews) => (
+          <Text key={singlenews.title} style={styles.TextContainer}>
+            {singlenews.title}
+          </Text>
+        ))}
+    </ScrollView>
+  );
 }
