@@ -1,4 +1,4 @@
-import {StyleSheet} from "react-native";
+import { StyleSheet } from "react-native";
 
 
 export const styles = StyleSheet.create({
@@ -104,5 +104,54 @@ export const styles = StyleSheet.create({
     },
     map: {
         flex: 1,
-    }
-}); // värit taustalle #B5DACE, #ECC0D1
+    }, // värit taustalle #B5DACE, #ECC0D1
+  buttonContainer: {
+    position: "absolute",
+    bottom: 50,
+    alignSelf: "center",
+  },
+  cameraButton: {
+    position: "absolute",
+    bottom: 40,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#3388ff",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  cameraButtonDisabled: {
+    backgroundColor: "#9e9e9e",
+  },
+  cameraIcon: {
+    fontSize: 26,
+  },
+  locateButton: {
+    position: "absolute",
+    bottom: 116,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  locateButtonActive: {
+    backgroundColor: "#3388ff",
+  },
+  locateIcon: {
+    fontSize: 26,
+  },
+});

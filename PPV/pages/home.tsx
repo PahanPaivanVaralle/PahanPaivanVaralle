@@ -4,30 +4,41 @@ import { styles } from "../global";
 import PocketBase from 'pocketbase';
 import { useEffect, useState } from "react";
 
+import {useCallback, useEffect, useState} from "react";
+import {useFocusEffect} from "@react-navigation/native";
 
-const pb = new PocketBase('https://pocketbase.misteri.fi')
+const pb = new PocketBase("https://pocketbase.misteri.fi")
 
 export default function Home() {
 
     const image = require("../assets/sovelluksenTausta.jpg")
-    const [token, setToken] = useState("");
+    const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        const login = async () => {
+        const fetchMessage = async () => {
             try {
-                const authData = await pb.collection("users")
-                    .authWithPassword('xcodeyt@gmail.com', 'xzD%ZVn3mQKIEB');
+                const first = await pb.collection('messages').getList(1, 1);
+                const total = first.totalItems;
 
-                console.log(pb.authStore.isValid);
-                console.log(pb.authStore.token);
+                const randomIndex = Math.floor(Math.random() * total);
 
-                setToken(pb.authStore.token);
+                const page = randomIndex + 1;
+                const result = await pb.collection('messages').getList(page, 1);
+
+                const randomMessage = result.items[0];
+
+                setMessage(randomMessage.msg);
             } catch (err) {
-                console.log("Login error:", err);
+                console.log("Error fetching positive message:", err);
             }
         };
         login();
     }, []);
+    
+        useFocusEffect(
+        useCallback(() => {
+            fetchMessage();
+        }, [])
+    );
 
     return (
 
