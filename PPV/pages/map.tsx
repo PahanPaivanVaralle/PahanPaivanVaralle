@@ -387,7 +387,7 @@ export default function MapPage() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.mapContainer}>
       <WebView
         ref={webViewRef}
         source={{ html: LEAFLET_HTML, baseUrl: "https://unpkg.com" }}
