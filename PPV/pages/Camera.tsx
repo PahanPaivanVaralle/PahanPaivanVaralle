@@ -1,5 +1,13 @@
 ﻿import { StatusBar } from 'expo-status-bar';
-import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  Modal,
+  Image,
+  Text,
+} from 'react-native';
 import { useState, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -19,14 +27,12 @@ export default function Camera() {
   const [uploading, setUploading] = useState(false);
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   const ref = useRef<CameraView>(null);
 
-  const askDestination = (uri: string) => {
-    Alert.alert('Kuva ladataan', 'Valitse minne kuva lisätään:', [
-      { text: 'Kartta', onPress: () => uploadAndNavigate(uri) },
-      { text: 'Feed', onPress: () => {} },
-    ]);
-  };
+  const askDestination = (uri: string) => setPreviewUri(uri);
+
+  const closePreview = () => setPreviewUri(null);
 
   const uploadAndNavigate = async (uri: string) => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -142,6 +148,51 @@ export default function Camera() {
       >
         <Ionicons name="phone-portrait" size={24} color="white" />
       </TouchableOpacity>
+      <Modal visible={!!previewUri} transparent animationType="fade">
+        <View style={styles.previewOverlay}>
+          {previewUri && (
+            <Image
+              source={{ uri: previewUri }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          )}
+          <View style={styles.previewActions}>
+            <TouchableOpacity
+              style={styles.previewBtn}
+              onPress={closePreview}
+              disabled={uploading}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Text style={styles.previewBtnText}>Peruuta</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.previewBtn, styles.previewBtnPrimary]}
+              onPress={() => {
+                closePreview();
+                uploadAndNavigate(previewUri!);
+              }}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Ionicons name="map" size={24} color="#fff" />
+              )}
+              <Text style={styles.previewBtnText}>Kartta</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.previewBtn, styles.previewBtnSecondary]}
+              disabled
+            >
+              <Ionicons name="newspaper" size={24} color="#aaa" />
+              <Text style={[styles.previewBtnText, { color: '#aaa' }]}>
+                Feed
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <StatusBar style="auto" />
     </View>
   );

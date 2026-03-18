@@ -92,6 +92,41 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
   },
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+  },
+  previewImage: {
+    width: '90%',
+    height: '65%',
+    borderRadius: 12,
+  },
+  previewActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  previewBtn: {
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  previewBtnPrimary: {
+    backgroundColor: '#3388ff',
+  },
+  previewBtnSecondary: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  previewBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   camera: {
     flex: 1,
   },
