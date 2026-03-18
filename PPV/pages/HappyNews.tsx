@@ -2,11 +2,13 @@ import { Text, View, Image, Animated, Linking } from 'react-native';
 import { styles } from '../global';
 import ScrollView = Animated.ScrollView;
 import { getNews } from '../utils/newsSorter';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FeedItem } from 'react-native-rss-parser';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 export default function HappyNews() {
   const [news, setNews] = useState([] as FeedItem[]);
+  const headerHeight = useHeaderHeight();
 
   useEffect(() => {
     const load = async () => {
@@ -18,14 +20,18 @@ export default function HappyNews() {
 
   if (news)
     return (
-      <ScrollView>
+      <ScrollView
+        contentContainerStyle={{
+          paddingBottom: headerHeight,
+        }}
+      >
         {news.map((singleArticle) => (
           <Text
             key={singleArticle.title}
             style={styles.TextContainer}
             onPress={() =>
               Linking.openURL(
-                String(singleArticle.links.some((url) => url.url)),
+                String(singleArticle.links.find((link) => link.url)?.url),
               )
             }
           >
