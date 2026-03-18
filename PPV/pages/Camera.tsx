@@ -1,17 +1,13 @@
 ﻿import { StatusBar } from 'expo-status-bar';
-import {
-  View,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
-import { useState } from 'react';
+import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useState, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { pb } from '../lib/pocketbase';
+import { styles } from '../global';
 
 interface ImageRecord {
   id: string;
@@ -21,6 +17,16 @@ interface ImageRecord {
 export default function Camera() {
   const navigation = useNavigation<any>();
   const [uploading, setUploading] = useState(false);
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const ref = useRef<CameraView>(null);
+
+  const askDestination = (uri: string) => {
+    Alert.alert('Kuva ladataan', 'Valitse minne kuva lisätään:', [
+      { text: 'Kartta', onPress: () => uploadAndNavigate(uri) },
+      { text: 'Feed', onPress: () => {} },
+    ]);
+  };
 
   const uploadAndNavigate = async (uri: string) => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -40,10 +46,12 @@ export default function Camera() {
       const fd = new FormData();
       fd.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' } as any);
       const img = await pb.collection<ImageRecord>('images').create(fd);
-      await pb
+      const rec = await pb
         .collection('map_markers')
         .create({ lang: la, long: lo, image: img.id });
-      navigation.navigate('Map' as never);
+      navigation.navigate('Map', {
+        newMarker: { la, lo, url: pb.files.getURL(img, img.image), id: rec.id },
+      } as never);
     } catch {
       Alert.alert('Virhe', 'Kuvan tallennus epäonnistui.');
     } finally {
@@ -51,7 +59,13 @@ export default function Camera() {
     }
   };
 
-  const openCamera = async () => {
+  const takePicture = async () => {
+    if (!ref.current || uploading) return;
+    const photo = await ref.current.takePictureAsync({ quality: 0.7 });
+    if (photo?.uri) askDestination(photo.uri);
+  };
+
+  const openNativeCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Lupa vaaditaan', 'Kameran käyttö vaatii luvan.');
@@ -61,7 +75,7 @@ export default function Camera() {
       mediaTypes: ['images'],
       quality: 0.7,
     });
-    if (!result.canceled) await uploadAndNavigate(result.assets[0].uri);
+    if (!result.canceled) askDestination(result.assets[0].uri);
   };
 
   const pickFromGallery = async () => {
@@ -74,37 +88,61 @@ export default function Camera() {
       mediaTypes: ['images'],
       quality: 0.7,
     });
-    if (!result.canceled) await uploadAndNavigate(result.assets[0].uri);
+    if (!result.canceled) askDestination(result.assets[0].uri);
   };
 
+  if (!permission) return null;
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.permissionContainer}>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+        >
+          <Ionicons name="camera" size={32} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
-    <View style={s.container}>
-      <TouchableOpacity style={s.btn} onPress={openCamera} disabled={uploading}>
-        <Ionicons name="camera" size={48} color={uploading ? '#aaa' : '#fff'} />
-      </TouchableOpacity>
-      {uploading && <ActivityIndicator color="#fff" size="large" />}
-      <TouchableOpacity style={s.btn} onPress={pickFromGallery} disabled={uploading}>
-        <Ionicons name="image" size={48} color={uploading ? '#aaa' : '#fff'} />
+    <View style={styles.CameraContainer}>
+      <CameraView ref={ref} style={styles.camera} facing={facing} />
+      <View style={styles.CameraButtons}>
+        <TouchableOpacity
+          onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+          disabled={uploading}
+        >
+          <Ionicons
+            name="camera-reverse"
+            size={64}
+            color={uploading ? '#888' : 'white'}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.captureButton}
+          onPress={takePicture}
+          disabled={uploading}
+        >
+          {uploading && <ActivityIndicator color="#fff" />}
+        </TouchableOpacity>
+        <TouchableOpacity onPress={pickFromGallery} disabled={uploading}>
+          <Ionicons
+            name="image"
+            size={64}
+            color={uploading ? '#888' : 'white'}
+          />
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity
+        style={styles.nativeCameraButton}
+        onPress={openNativeCamera}
+        disabled={uploading}
+      >
+        <Ionicons name="phone-portrait" size={24} color="white" />
       </TouchableOpacity>
       <StatusBar style="auto" />
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#222',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 40,
-  },
-  btn: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
