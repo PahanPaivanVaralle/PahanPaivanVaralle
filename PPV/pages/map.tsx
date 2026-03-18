@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
-import { useFocusEffect } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useRoute,
+  useNavigation,
+} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
@@ -76,6 +80,9 @@ export default function MapPage() {
   const genRef = useRef(0);
   const needsReload = useRef(false);
   const [tracking, setTracking] = useState(false);
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const skipNextReload = useRef(false);
 
   const run = (code: string) => webRef.current?.injectJavaScript(js(code));
 
@@ -174,6 +181,10 @@ export default function MapPage() {
 
   useFocusEffect(
     useCallback(() => {
+      if (skipNextReload.current) {
+        skipNextReload.current = false;
+        return;
+      }
       if (!ready.current) {
         needsReload.current = true;
         return;
@@ -182,6 +193,16 @@ export default function MapPage() {
       loadMarkers();
     }, []),
   );
+
+  useEffect(() => {
+    const m = route.params?.newMarker;
+    if (!m) return;
+    navigation.setParams({ newMarker: undefined });
+    skipNextReload.current = true;
+    if (ready.current) {
+      run(`addPhotoToCluster(${m.la},${m.lo},${S(m.url)},${S(m.id)},0)`);
+    }
+  }, [route.params?.newMarker]);
 
   return (
     <View style={styles.mapContainer}>
