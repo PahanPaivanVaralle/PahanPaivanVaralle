@@ -27,7 +27,7 @@ export default function HappyNews() {
       >
         {news.map((singleArticle) => (
           <Text
-            key={singleArticle.title}
+            key={singleArticle.id}
             style={styles.TextContainer}
             onPress={() =>
               Linking.openURL(

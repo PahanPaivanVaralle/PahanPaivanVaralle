@@ -56,10 +56,7 @@ export const getNews = async (): Promise<FeedItem[]> => {
   ];
 
   try {
-    const sources = [
-      'https://www.iltalehti.fi/rss.xml',
-      'https://feeds.yle.fi/uutiset/v1/majorHeadlines/YLE_UUTISET.rss',
-    ];
+    const sources = ['https://www.goodnewsnetwork.org/category/news/feed/'];
 
     const feeds = await Promise.all(
       sources.map(async (url) => {
@@ -67,12 +64,7 @@ export const getNews = async (): Promise<FeedItem[]> => {
         const text = await res.text();
         const feed = await parse(text);
 
-        return feed.items.filter(
-          (item) =>
-            !negativeWords.some((word) =>
-              item.title.toLowerCase().includes(word),
-            ),
-        );
+        return feed.items;
       }),
     );
 
