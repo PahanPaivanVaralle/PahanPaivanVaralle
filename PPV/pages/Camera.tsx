@@ -16,6 +16,7 @@ import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ImageRecord {
   id: string;
@@ -29,6 +30,8 @@ export default function Camera() {
   const [permission, requestPermission] = useCameraPermissions();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const ref = useRef<CameraView>(null);
+  const [insetOffset, setInsetOffset] = useState(0);
+  const insets = useSafeAreaInsets();
 
   const askDestination = (uri: string) => setPreviewUri(uri);
 
@@ -95,6 +98,7 @@ export default function Camera() {
       quality: 0.7,
     });
     if (!result.canceled) askDestination(result.assets[0].uri);
+    else setInsetOffset(50);
   };
 
   if (!permission) return null;
@@ -117,6 +121,7 @@ export default function Camera() {
       <CameraView ref={ref} style={styles.camera} facing={facing} />
       <View style={styles.CameraButtons}>
         <TouchableOpacity
+          style={{ paddingBottom: insets.top + insetOffset }}
           onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
           disabled={uploading}
         >
