@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   background: {
-    backgroundColor: '#E4ACEA',
+    backgroundColor: 'rgba(228, 172, 234, 1)',
   },
 
   container: {
