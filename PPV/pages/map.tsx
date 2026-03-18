@@ -47,8 +47,8 @@ html,body,#map{height:100%;margin:0;padding:0}
 .cbtn.on{background:#e8f5e9;border-color:#388e3c}
 .pe{display:flex;flex-direction:column;align-items:flex-start}
 </style></head><body><div id="map"></div><script>
-var map=L.map('map').setView([64.5,26],5),msg=function(s){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(s)};
-L.tileLayer('https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${TILE_KEY}',{maxZoom:19}).addTo(map);
+var map=L.map('map',{maxZoom:22}).setView([64.5,26],5),msg=function(s){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(s)};
+L.tileLayer('https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${TILE_KEY}',{maxZoom:22,maxNativeZoom:19}).addTo(map);
 var gps=L.circleMarker([64.5,26],{radius:10,color:'#fff',fillColor:'#3388ff',fillOpacity:1,weight:3}).addTo(map).bindPopup("Sijaintisi");
 var C={},T={},liked=new Set(),fl=true,tr=false;
 var ck=function(a,b){return parseFloat(a).toFixed(5)+','+parseFloat(b).toFixed(5)};
@@ -59,10 +59,10 @@ var taskHTML=function(t,d,img,id,lk){var h='<b>'+t+'</b>';if(d)h+='<br><span sty
 var mkI=function(n){var b=n>1?'<div class="cnt">'+n+'</div>':'';return L.divIcon({html:'<div class="mw"><div style="background:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.35)">\\ud83d\\udcf7</div>'+b+'</div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''})};
 var mkT=function(ic,co){return L.divIcon({html:'<div style="background:'+(co||'#fff')+';border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)"><ion-icon name="'+ic+'" style="font-size:20px;color:#fff"></ion-icon></div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''})};
 var addTaskMarker=function(la,lo,t,ic,co,d,img,id,lk){var m=L.marker([la,lo],{icon:mkT(ic||'location',co||'#3388ff')}).addTo(map).bindPopup(taskHTML(t,d,img,id,lk),{maxWidth:240});T[id]={marker:m,t:t,d:d,img:img,lk:lk}};
-var addPhotoToCluster=function(la,lo,url,id,lk){var k=ck(la,lo),e={imageUrl:url,markerId:id,likes:lk};if(C[k]){C[k].entries.push(e);C[k].marker.setIcon(mkI(C[k].entries.length));C[k].marker.setPopupContent(galleryHTML(C[k].entries))}else{var m=L.marker([la,lo],{icon:mkI(1)}).addTo(map).bindPopup(galleryHTML([e]),{maxWidth:300});C[k]={marker:m,entries:[e]}}};
+var addPhotoToCluster=function(la,lo,url,id,lk){var e={imageUrl:url,markerId:id,likes:lk},fk=null;for(var k in C){var dr=(C[k].la-la)*Math.PI/180,dc=(C[k].lo-lo)*Math.PI/180,mr=(C[k].la+la)/2*Math.PI/180,dx=dc*Math.cos(mr)*6371000,dy=dr*6371000;if(Math.sqrt(dx*dx+dy*dy)<20){fk=k;break}}if(fk){C[fk].entries.push(e);C[fk].marker.setIcon(mkI(C[fk].entries.length));C[fk].marker.setPopupContent(galleryHTML(C[fk].entries))}else{var nk=ck(la,lo),m=L.marker([la,lo],{icon:mkI(1)}).addTo(map).bindPopup(galleryHTML([e]),{maxWidth:300});C[nk]={marker:m,entries:[e],la:la,lo:lo}}};
 var clearMarkers=function(){for(var k in C)map.removeLayer(C[k].marker),delete C[k];for(var k in T)map.removeLayer(T[k].marker),delete T[k]};
 var setLikedIds=function(ids){liked=new Set(ids)};
-var updateLikes=function(id,n,on){if(on)liked.add(id);else liked.delete(id);if(T[id]){T[id].lk=n;T[id].marker.setPopupContent(taskHTML(T[id].t,T[id].d,T[id].img,id,n));return}for(var k in C){var e=C[k].entries.find(function(x){return x.markerId===id});if(e){e.likes=n;C[k].marker.setPopupContent(galleryHTML(C[k].entries));return}}};
+var updateLikes=function(id,n,on){if(on)liked.add(id);else liked.delete(id);if(T[id]){T[id].lk=n;}else{for(var k in C){var e=C[k].entries.find(function(x){return x.markerId===id});if(e){e.likes=n;break}}}var btn=document.querySelector('[data-toggle="'+id+'"]');if(btn){if(btn.classList.contains('lbtn')){if(on){btn.classList.add('on');btn.innerHTML='\\u2764\\ufe0f '+n;}else{btn.classList.remove('on');btn.innerHTML='\\u2661 '+n;}}else if(btn.classList.contains('cbtn')){if(on){btn.classList.add('on');btn.innerHTML='\\u2705 Tehty';}else{btn.classList.remove('on');btn.innerHTML='\\u2b1c Merkkaa tehdyksi';}}return;}if(T[id]){T[id].marker.setPopupContent(taskHTML(T[id].t,T[id].d,T[id].img,id,n));return;}for(var k in C){var e=C[k].entries.find(function(x){return x.markerId===id});if(e){C[k].marker.setPopupContent(galleryHTML(C[k].entries));return;}}};
 var updateLocation=function(la,lo){gps.setLatLng([la,lo]);if(fl){map.setView([la,lo],15);fl=false}else if(tr)map.panTo([la,lo])};
 var centerOnUser=function(){tr=true;map.setView(gps.getLatLng(),16)};
 map.on('dragstart',function(){if(tr){tr=false;msg('unlock')}});
@@ -82,7 +82,8 @@ export default function MapPage() {
   const [tracking, setTracking] = useState(false);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const skipNextReload = useRef(false);
+  const newMarkerParamRef = useRef<any>(undefined);
+  newMarkerParamRef.current = route.params?.newMarker;
 
   const run = (code: string) => webRef.current?.injectJavaScript(js(code));
 
@@ -181,8 +182,8 @@ export default function MapPage() {
 
   useFocusEffect(
     useCallback(() => {
-      if (skipNextReload.current) {
-        skipNextReload.current = false;
+      if (newMarkerParamRef.current) {
+        // newMarker param present — useEffect will inject it directly, skip full reload
         return;
       }
       if (!ready.current) {
@@ -198,7 +199,6 @@ export default function MapPage() {
     const m = route.params?.newMarker;
     if (!m) return;
     navigation.setParams({ newMarker: undefined });
-    skipNextReload.current = true;
     if (ready.current) {
       run(`addPhotoToCluster(${m.la},${m.lo},${S(m.url)},${S(m.id)},0)`);
     }
