@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, Button, ImageBackground } from "react-native";
 import PocketBase from "pocketbase";
 import { styles } from "../global";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export default function WritePage() {
     const image = require("../assets/sovelluksenTausta.jpg")
@@ -21,7 +22,9 @@ export default function WritePage() {
     };
 
     return (
+    
         <ImageBackground source={image} style={styles.imageBackground}>
+            <KeyboardAwareScrollView>
             <View style={{ flex: 1, justifyContent: "center", padding: 20 }}>
 
                 <View style={styles.TextContainer}>
@@ -34,8 +37,11 @@ export default function WritePage() {
                     />
                 </View>
                 <Button title="Send your letter" onPress={handleSubmit} />
-
+                
             </View>
+            </KeyboardAwareScrollView>
         </ImageBackground>
+        
+       
     );
 }

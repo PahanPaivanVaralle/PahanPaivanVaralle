@@ -69,6 +69,64 @@ export const styles = StyleSheet.create({
   CameraContainer: {
     flex: 1,
   },
+  cameraPageContainer: {
+    flex: 1,
+    backgroundColor: '#222',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 40,
+  },
+  cameraPageBtn: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#444',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nativeCameraButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+  },
+  previewImage: {
+    width: '90%',
+    height: '65%',
+    borderRadius: 12,
+  },
+  previewActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  previewBtn: {
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  previewBtnPrimary: {
+    backgroundColor: '#3388ff',
+  },
+  previewBtnSecondary: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  previewBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   camera: {
     flex: 1,
   },
@@ -79,7 +137,6 @@ export const styles = StyleSheet.create({
   },
   CameraButtons: {
     position: 'absolute',
-    bottom: 50,
     flexDirection: 'row',
     bottom: 25,
     alignSelf: 'center',

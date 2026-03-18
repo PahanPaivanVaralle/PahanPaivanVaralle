@@ -1,19 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import * as Location from 'expo-location';
 import {
-  View,
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
-import { WebView, WebViewMessageEvent } from "react-native-webview";
-import * as Location from "expo-location";
-import * as ImagePicker from "expo-image-picker";
-import { useFocusEffect } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { pb } from "../lib/pocketbase";
-import { styles } from "../global";
-import {LocationSubscription} from "expo-location";
+  useFocusEffect,
+  useRoute,
+  useNavigation,
+} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { pb } from '../lib/pocketbase';
+import { styles } from '../global';
 
 interface ImageRecord {
   id: string;
@@ -31,8 +27,8 @@ interface MapMarkerRecord {
   expand?: { image?: ImageRecord };
 }
 
-const TILE_KEY = "O5UEYayzmhespubk3jjK";
-const LIKED_KEY = "ppv_liked_markers";
+const TILE_KEY = 'O5UEYayzmhespubk3jjK';
+const LIKED_KEY = 'ppv_liked_markers';
 
 const LEAFLET_HTML = `<!DOCTYPE html><html><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -82,9 +78,11 @@ export default function MapPage() {
   const liked = useRef<Set<string>>(new Set());
   const ready = useRef(false);
   const genRef = useRef(0);
-  const [uploading, setUploading] = useState(false);
+  const needsReload = useRef(false);
   const [tracking, setTracking] = useState(false);
-  const locationSub = useRef<LocationSubscription | null>(null);
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const skipNextReload = useRef(false);
 
   const run = (code: string) => webRef.current?.injectJavaScript(js(code));
 
@@ -101,21 +99,39 @@ export default function MapPage() {
     }
   };
 
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 1,
+          timeInterval: 1000,
+        },
+        (loc) => {
+          locRef.current = loc;
+          run(`updateLocation(${loc.coords.latitude},${loc.coords.longitude})`);
+        },
+      );
+    })();
+  }, []);
+
   const loadMarkers = async () => {
     try {
       await loadLiked();
       const { items } = await pb
-        .collection("map_markers")
+        .collection('map_markers')
         .getList<MapMarkerRecord>(1, 500, {
-          sort: "-created",
-          expand: "image",
+          sort: '-created',
+          expand: 'image',
         });
       items.forEach((r) => {
         const img = r.expand?.image;
-        const url = img ? pb.files.getURL(img, img.image) : "";
+        const url = img ? pb.files.getURL(img, img.image) : '';
         if (r.title) {
           run(
-            `addTaskMarker(${r.lang},${r.long},${S(r.title)},${S(r.icon || "location")},${S(r.color || "#3388ff")},${S(r.desc || "")},${S(url)},${S(r.id)},${r.likes ?? 0})`,
+            `addTaskMarker(${r.lang},${r.long},${S(r.title)},${S(r.icon || 'location')},${S(r.color || '#3388ff')},${S(r.desc || '')},${S(url)},${S(r.id)},${r.likes ?? 0})`,
           );
         } else if (img) {
           run(
@@ -124,7 +140,7 @@ export default function MapPage() {
         }
       });
     } catch (e) {
-      console.error("Markkereiden lataus epäonnistui:", e);
+      console.error('Markkereiden lataus epäonnistui:', e);
     }
   };
 
@@ -133,12 +149,12 @@ export default function MapPage() {
     if (isLike) liked.current.add(markerId);
     else liked.current.delete(markerId);
     saveLiked();
-    pb.collection("map_markers")
+    pb.collection('map_markers')
       .getOne(markerId)
       .then((rec) => {
         const n = Math.max(0, ((rec.likes as number) ?? 0) + delta);
         return pb
-          .collection("map_markers")
+          .collection('map_markers')
           .update(markerId, { likes: n })
           .then(() => n);
       })
@@ -147,101 +163,54 @@ export default function MapPage() {
         if (isLike) liked.current.delete(markerId);
         else liked.current.add(markerId);
         saveLiked();
-        console.error("Tykkäys epäonnistui:", e);
+        console.error('Tykkäys epäonnistui:', e);
       });
   };
 
   const onMessage = (e: WebViewMessageEvent) => {
     const d = e.nativeEvent.data;
-    if (d === "ready") {
+    if (d === 'ready') {
       ready.current = true;
-      run("clearMarkers()");
+      needsReload.current = false;
+      run('clearMarkers()');
       loadMarkers();
-    } else if (d === "unlock") setTracking(false);
-    else if (d.startsWith("like:")) handleToggle(d.slice(5), true);
-    else if (d.startsWith("unlike:")) handleToggle(d.slice(7), false);
+    } else if (d === 'unlock') setTracking(false);
+    else if (d.startsWith('like:')) handleToggle(d.slice(5), true);
+    else if (d.startsWith('unlike:')) handleToggle(d.slice(7), false);
   };
 
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") return;
-        locationSub.current = await Location.watchPositionAsync(
-            {
-              accuracy: Location.Accuracy.BestForNavigation,
-              distanceInterval: 1,
-              timeInterval: 1000,
-            },
-            (loc) => {
-              locRef.current = loc;
-              console.log("Location updated");
-              run(`updateLocation(${loc.coords.latitude},${loc.coords.longitude})`);
-            },
-        );
-      })();
-      if (ready.current) {
-        run("clearMarkers()");
-        loadMarkers();
+      if (skipNextReload.current) {
+        skipNextReload.current = false;
+        return;
       }
-      return () => {
-        locationSub.current.remove();
-        locationSub.current = null;
-      };
+      if (!ready.current) {
+        needsReload.current = true;
+        return;
+      }
+      run('clearMarkers()');
+      loadMarkers();
     }, []),
   );
 
-  const uploadPhoto = async (uri: string) => {
-    if (!locRef.current) {
-      Alert.alert("Sijainti puuttuu", "Odota hetki kunnes sijainti on saatu.");
-      return;
+  useEffect(() => {
+    const m = route.params?.newMarker;
+    if (!m) return;
+    navigation.setParams({ newMarker: undefined });
+    skipNextReload.current = true;
+    if (ready.current) {
+      run(`addPhotoToCluster(${m.la},${m.lo},${S(m.url)},${S(m.id)},0)`);
     }
-    setUploading(true);
-    try {
-      const { latitude: la, longitude: lo } = locRef.current.coords;
-      const fd = new FormData();
-      fd.append("image", { uri, name: "photo.jpg", type: "image/jpeg" } as any);
-      const img = await pb.collection<ImageRecord>("images").create(fd);
-      const rec = await pb
-        .collection("map_markers")
-        .create({ lang: la, long: lo, image: img.id });
-      run(
-        `addPhotoToCluster(${la},${lo},${S(pb.files.getURL(img, img.image))},${S(rec.id)},0)`,
-      );
-    } catch {
-      Alert.alert("Virhe", "Kuvan tallennus epäonnistui.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const pickImage = async (fromCamera: boolean) => {
-    const perm = fromCamera
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (perm.status !== "granted") {
-      Alert.alert("Lupa vaaditaan");
-      return;
-    }
-    const result = fromCamera
-      ? await ImagePicker.launchCameraAsync({
-          mediaTypes: ["images"],
-          quality: 0.7,
-        })
-      : await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ["images"],
-          quality: 0.7,
-        });
-    if (!result.canceled) await uploadPhoto(result.assets[0].uri);
-  };
+  }, [route.params?.newMarker]);
 
   return (
     <View style={styles.mapContainer}>
       <WebView
         ref={webRef}
-        source={{ html: LEAFLET_HTML, baseUrl: "https://unpkg.com" }}
+        source={{ html: LEAFLET_HTML, baseUrl: 'https://unpkg.com' }}
         style={styles.map}
-        originWhitelist={["*"]}
+        originWhitelist={['*']}
         mixedContentMode="always"
         onMessage={onMessage}
         onLoadStart={() => {
@@ -252,27 +221,10 @@ export default function MapPage() {
         style={[styles.locateButton, tracking && styles.locateButtonActive]}
         onPress={() => {
           setTracking(true);
-          run("centerOnUser()");
+          run('centerOnUser()');
         }}
       >
         <Text style={styles.locateIcon}>📍</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.cameraButton, uploading && styles.cameraButtonDisabled]}
-        onPress={() =>
-          Alert.alert("Lisää kuva", "Valitse lähde", [
-            { text: "Kamera", onPress: () => pickImage(true) },
-            { text: "Galleria", onPress: () => pickImage(false) },
-            { text: "Peruuta", style: "cancel" },
-          ])
-        }
-        disabled={uploading}
-      >
-        {uploading ? (
-          <ActivityIndicator color="#fff" size="small" />
-        ) : (
-          <Text style={styles.cameraIcon}>📷</Text>
-        )}
       </TouchableOpacity>
     </View>
   );
