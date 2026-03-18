@@ -5,6 +5,8 @@ import {styles} from "../global";
 import Camera from "../pages/Camera";
 import MapPage from "../pages/map";
 import HappyNews from "../pages/HappyNews";
+import WritePage from "../pages/WritePage";
+
 
 const Tab = createBottomTabNavigator();
 
@@ -51,11 +53,11 @@ export default function NavBar() {
                 }}
             />
             <Tab.Screen
-                name="Comments"
-                component={Home}
+                name="Write a letter"
+                component={WritePage}
                 options={{
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="people" size={size} color={color} />
+                        <Ionicons name="reader-outline" size={size} color={color} />
                     ),
                 }}
             />
