@@ -10,6 +10,7 @@ const pb = new PocketBase('https://pocketbase.misteri.fi');
 
 export default function Home() {
   const [message, setMessage] = useState('');
+  const [image, setImage] = useState('');
 
   const fetchMessage = async () => {
     try {
@@ -29,9 +30,31 @@ export default function Home() {
     }
   };
 
+  const fetchImage = async () => {
+    try {
+      const first = await pb.collection('feed_images').getList(1, 1);
+      const total = first.totalItems;
+
+      if (total === 0) return;
+
+      const randomIndex = Math.floor(Math.random() * total);
+      const page = randomIndex + 1;
+
+      const result = await pb.collection('feed_images').getList(page, 1);
+      const randomImage = result.items[0];
+
+      const url = pb.files.getURL(randomImage, randomImage.image);
+
+      setImage(url);
+    } catch (err) {
+      console.log('Error fetching image:', err);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchMessage();
+      fetchImage();
     }, []),
   );
 
@@ -41,12 +64,10 @@ export default function Home() {
         <View style={styles.TextContainer}>
           <Text style={styles.textStyle}>{message}</Text>
         </View>
-
         <View style={styles.imageContainer}>
-          <Image
-            source={require('../assets/cat.png')}
-            style={styles.imageStyle}
-          />
+          {image && <Image 
+          source={{ uri: image }} 
+          style={styles.imageStyle} />}
         </View>
         <View style={styles.imageContainer}>
           <Image
