@@ -68,6 +68,12 @@ export default function Camera() {
     }
   };
 
+  const uploadToFeed = async (uri: string) => {
+    const fd = new FormData();
+    fd.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' } as any);
+    await pb.collection('feed_images').create(fd);
+  };
+
   const takePicture = async () => {
     if (!ref.current || uploading) return;
     const photo = await ref.current.takePictureAsync({ quality: 0.7 });
@@ -118,7 +124,11 @@ export default function Camera() {
 
   return (
     <View style={styles.CameraContainer}>
-      <CameraView ref={ref} style={styles.camera} facing={facing} />
+      <CameraView 
+      ref={ref}
+      style={styles.camera}
+      facing={facing}
+      />
       <View style={styles.CameraButtons}>
         <TouchableOpacity
           style={{ paddingBottom: insets.top + insetOffset }}
@@ -151,7 +161,7 @@ export default function Camera() {
         onPress={openNativeCamera}
         disabled={uploading}
       >
-        <Ionicons name="phone-portrait" size={24} color="white" />
+        <Ionicons name="camera" size={48} color="white" />
       </TouchableOpacity>
       <Modal visible={!!previewUri} transparent animationType="fade">
         <View style={styles.previewOverlay}>
@@ -188,7 +198,11 @@ export default function Camera() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.previewBtn, styles.previewBtnSecondary]}
-              disabled
+              onPress={() => {
+                closePreview();
+                uploadToFeed(previewUri!);
+              }}
+              disabled={uploading}
             >
               <Ionicons name="newspaper" size={24} color="#aaa" />
               <Text style={[styles.previewBtnText, { color: '#aaa' }]}>
