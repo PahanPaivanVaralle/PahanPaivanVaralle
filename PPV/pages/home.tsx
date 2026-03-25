@@ -69,7 +69,7 @@ const fetchImage = async () => {
 
   return (
     <ScrollView>
-      <View style={styles.container}>
+      
         <View style={styles.TextContainer}>
           <Text style={styles.textStyle}>{message}</Text>
         </View>
@@ -88,7 +88,7 @@ const fetchImage = async () => {
           
         </View>
         <StatusBar style="auto" />
-      </View>
+     
     </ScrollView>
   );
 }
