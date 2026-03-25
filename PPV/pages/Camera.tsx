@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Platform } from 'react-native';
 
 interface ImageRecord {
   id: string;
@@ -32,9 +33,7 @@ export default function Camera() {
   const ref = useRef<CameraView>(null);
   const [insetOffset, setInsetOffset] = useState(0);
   const insets = useSafeAreaInsets();
-
   const askDestination = (uri: string) => setPreviewUri(uri);
-
   const closePreview = () => setPreviewUri(null);
 
   const uploadAndNavigate = async (uri: string) => {
@@ -104,7 +103,7 @@ export default function Camera() {
       quality: 0.7,
     });
     if (!result.canceled) askDestination(result.assets[0].uri);
-    else setInsetOffset(50);
+    else Platform.OS != 'ios' && setInsetOffset(50);
   };
 
   if (!permission) return null;
@@ -131,7 +130,7 @@ export default function Camera() {
       />
       <View style={styles.CameraButtons}>
         <TouchableOpacity
-          style={{ paddingBottom: insets.top + insetOffset }}
+          style={{ paddingBottom: insets.top + (Platform.OS === 'ios' ? 25 : insetOffset) }}
           onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
           disabled={uploading}
         >
