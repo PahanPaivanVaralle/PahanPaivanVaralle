@@ -70,16 +70,32 @@ export default function Camera() {
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.High,
     });
+    const { latitude: la, longitude: lo } = loc.coords;
+
+    // Find the target task and always enforce the 10m distance check
+    const targetTask = forceTaskId
+      ? (taskMarkers.find((t) => t.id === forceTaskId) ?? null)
+      : null;
+
+    if (targetTask) {
+      const dist = distanceMetres(la, lo, targetTask.la, targetTask.lo);
+      if (dist > 10) {
+        Alert.alert(
+          'Liian kaukana!',
+          `Olet ${Math.round(dist)} metrin päässä tehtävästä. Siirry lähemmäs tehtävää.`,
+        );
+        return;
+      }
+    }
+
+    // Auto-detect nearby task if no explicit task selected
+    const nearbyTask =
+      targetTask ??
+      taskMarkers.find((t) => distanceMetres(la, lo, t.la, t.lo) <= 10) ??
+      null;
+
     setUploading(true);
     try {
-      const { latitude: la, longitude: lo } = loc.coords;
-
-      // Check if user is within 10m of a task marker, or a task was explicitly selected
-      const nearbyTask = forceTaskId
-        ? (taskMarkers.find((t) => t.id === forceTaskId) ?? null)
-        : (taskMarkers.find((t) => distanceMetres(la, lo, t.la, t.lo) <= 10) ??
-          null);
-
       const fd = new FormData();
       fd.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' } as any);
       const img = await pb.collection<ImageRecord>('images').create(fd);
@@ -182,8 +198,7 @@ export default function Camera() {
       )}
       <View
         style={{
-          paddingBottom:
-            insets.bottom + 40,
+          paddingBottom: insets.bottom + 40,
           position: 'absolute',
           flexDirection: 'row',
           bottom: 25,
@@ -237,7 +252,6 @@ export default function Camera() {
               style={styles.previewBtn}
               onPress={() => {
                 closePreview();
-                setPendingTask(null);
               }}
               disabled={uploading}
             >

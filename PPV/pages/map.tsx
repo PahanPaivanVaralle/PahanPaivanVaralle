@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, Alert } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
 import {
@@ -16,6 +16,7 @@ import {
   isStreakAlive,
   StreakData,
   TaskMarker,
+  distanceMetres,
 } from '../utils/streak';
 
 interface ImageRecord {
@@ -250,6 +251,22 @@ export default function MapPage() {
     else if (d.startsWith('do-task:')) {
       const taskId = d.slice(8);
       const task = taskMarkersRef.current.find((t) => t.id === taskId);
+      const loc = locRef.current;
+      if (task && loc) {
+        const dist = distanceMetres(
+          loc.coords.latitude,
+          loc.coords.longitude,
+          task.la,
+          task.lo,
+        );
+        if (dist > 20) {
+          Alert.alert(
+            'Liian kaukana!',
+            `Olet ${Math.round(dist)} metrin päässä tehtävästä. Siirry lähemmäs tehtävää.\n\n[debug] sinä: ${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}\ntehtävä: ${task.la}, ${task.lo}`,
+          );
+          return;
+        }
+      }
       navigation.navigate('Camera', {
         taskId,
         taskTitle: task?.title ?? 'Tehtävä',
