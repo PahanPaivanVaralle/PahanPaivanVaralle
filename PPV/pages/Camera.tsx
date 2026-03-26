@@ -19,6 +19,7 @@ import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { distanceMetres, TaskMarker } from '../utils/streak';
+import { Platform } from 'react-native';
 
 interface ImageRecord {
   id: string;
@@ -53,11 +54,8 @@ export default function Camera() {
   const [permission, requestPermission] = useCameraPermissions();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const ref = useRef<CameraView>(null);
-  const [insetOffset, setInsetOffset] = useState(0);
   const insets = useSafeAreaInsets();
-
   const askDestination = (uri: string) => setPreviewUri(uri);
-
   const closePreview = () => setPreviewUri(null);
 
   const uploadAndNavigate = async (uri: string, forceTaskId?: string) => {
@@ -121,6 +119,12 @@ export default function Camera() {
     }
   };
 
+  const uploadToFeed = async (uri: string) => {
+    const fd = new FormData();
+    fd.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' } as any);
+    await pb.collection('feed_images').create(fd);
+  };
+
   const takePicture = async () => {
     if (!ref.current || uploading) return;
     const photo = await ref.current.takePictureAsync({ quality: 0.7 });
@@ -151,7 +155,6 @@ export default function Camera() {
       quality: 0.7,
     });
     if (!result.canceled) askDestination(result.assets[0].uri);
-    else setInsetOffset(50);
   };
 
   if (!permission) return null;
@@ -177,9 +180,18 @@ export default function Camera() {
           <Text style={styles.taskBannerText}>🎯 {pendingTask.title}</Text>
         </View>
       )}
-      <View style={styles.CameraButtons}>
+      <View
+        style={{
+          paddingBottom:
+            insets.bottom + 40,
+          position: 'absolute',
+          flexDirection: 'row',
+          bottom: 25,
+          alignSelf: 'center',
+          gap: 50,
+        }}
+      >
         <TouchableOpacity
-          style={{ paddingBottom: insets.top + insetOffset }}
           onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
           disabled={uploading}
         >
@@ -209,7 +221,7 @@ export default function Camera() {
         onPress={openNativeCamera}
         disabled={uploading}
       >
-        <Ionicons name="phone-portrait" size={24} color="white" />
+        <Ionicons name="camera" size={48} color="white" />
       </TouchableOpacity>
       <Modal visible={!!previewUri} transparent animationType="fade">
         <View style={styles.previewOverlay}>
@@ -269,7 +281,11 @@ export default function Camera() {
             )}
             <TouchableOpacity
               style={[styles.previewBtn, styles.previewBtnSecondary]}
-              disabled
+              onPress={() => {
+                closePreview();
+                uploadToFeed(previewUri!);
+              }}
+              disabled={uploading}
             >
               <Ionicons name="newspaper" size={24} color="#aaa" />
               <Text style={[styles.previewBtnText, { color: '#aaa' }]}>

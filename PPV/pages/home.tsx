@@ -10,7 +10,8 @@ const pb = new PocketBase('https://pocketbase.misteri.fi');
 
 export default function Home() {
   const [message, setMessage] = useState('');
-  const [image, setImage] = useState('');
+  const [image1, setImage1] = useState('');
+  const [image2, setImage2] = useState('');
 
   const fetchMessage = async () => {
     try {
@@ -30,26 +31,34 @@ export default function Home() {
     }
   };
 
-  const fetchImage = async () => {
-    try {
-      const first = await pb.collection('feed_images').getList(1, 1);
-      const total = first.totalItems;
+const fetchImage = async () => {
+  try {
+    const first = await pb.collection('feed_images').getList(1, 1);
+    const total = first.totalItems;
 
-      if (total === 0) return;
+    if (total === 0) return;
 
-      const randomIndex = Math.floor(Math.random() * total);
-      const page = randomIndex + 1;
+    const index1 = Math.floor(Math.random() * total);
+    let index2 = Math.floor(Math.random() * total);
 
-      const result = await pb.collection('feed_images').getList(page, 1);
-      const randomImage = result.items[0];
-
-      const url = pb.files.getURL(randomImage, randomImage.image);
-
-      setImage(url);
-    } catch (err) {
-      console.log('Error fetching image:', err);
+    while (index2 === index1) {
+      index2 = Math.floor(Math.random() * total);
     }
-  };
+
+    const res1 = await pb.collection('feed_images').getList(index1 + 1, 1);
+    const res2 = await pb.collection('feed_images').getList(index2 + 1, 1);
+
+    const img1 = res1.items[0];
+    const img2 = res2.items[0];
+
+    setImage1(pb.files.getURL(img1, img1.image));
+    setImage2(pb.files.getURL(img2, img2.image));
+
+  } catch (err) {
+    console.log('Error fetching image:', err);
+  }
+};
+
 
   useFocusEffect(
     useCallback(() => {
@@ -60,23 +69,26 @@ export default function Home() {
 
   return (
     <ScrollView>
-      <View style={styles.container}>
+      
         <View style={styles.TextContainer}>
           <Text style={styles.textStyle}>{message}</Text>
         </View>
         <View style={styles.imageContainer}>
-          {image && <Image 
-          source={{ uri: image }} 
+
+          {image1 && <Image 
+          source={{ uri: image1 }} 
           style={styles.imageStyle} />}
+
         </View>
         <View style={styles.imageContainer}>
-          <Image
-            source={require('../assets/icon.png')}
-            style={styles.imageStyle}
-          />
+         
+          {image2 && <Image 
+          source={{ uri: image2 }} 
+          style={styles.imageStyle} />}
+          
         </View>
         <StatusBar style="auto" />
-      </View>
+     
     </ScrollView>
   );
 }
