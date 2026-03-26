@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, ImageBackground, ScrollView } from 'react-native';
 import { styles } from '../global';
-import PocketBase from 'pocketbase';
+import PocketBase, { RecordModel } from 'pocketbase';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -10,8 +10,8 @@ const pb = new PocketBase('https://pocketbase.misteri.fi');
 
 export default function Home() {
   const [message, setMessage] = useState('');
-  const [image1, setImage1] = useState('');
-  const [image2, setImage2] = useState('');
+  const [images, setImages] = useState<RecordModel[]>([]);
+  
 
   const fetchMessage = async () => {
     try {
@@ -31,34 +31,14 @@ export default function Home() {
     }
   };
 
-const fetchImage = async () => {
-  try {
-    const first = await pb.collection('feed_images').getList(1, 1);
-    const total = first.totalItems;
-
-    if (total === 0) return;
-
-    const index1 = Math.floor(Math.random() * total);
-    let index2 = Math.floor(Math.random() * total);
-
-    while (index2 === index1) {
-      index2 = Math.floor(Math.random() * total);
+  const fetchImage = async () => {
+    try {
+      const first = await pb.collection('feed_images').getFullList({ sort: '-created' });
+      setImages(first);
+    } catch (err) {
+      console.log('Error fetching image:', err);
     }
-
-    const res1 = await pb.collection('feed_images').getList(index1 + 1, 1);
-    const res2 = await pb.collection('feed_images').getList(index2 + 1, 1);
-
-    const img1 = res1.items[0];
-    const img2 = res2.items[0];
-
-    setImage1(pb.files.getURL(img1, img1.image));
-    setImage2(pb.files.getURL(img2, img2.image));
-
-  } catch (err) {
-    console.log('Error fetching image:', err);
-  }
-};
-
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -69,26 +49,24 @@ const fetchImage = async () => {
 
   return (
     <ScrollView>
-      
-        <View style={styles.TextContainer}>
-          <Text style={styles.textStyle}>{message}</Text>
+      <Text style={{ fontSize: 16, color: '#555', paddingHorizontal: 20, marginTop: 20 }}>
+        Heres a positive message for you made by one of our users to brighten up your day!
+      </Text>
+      <View style={styles.TextContainer}>
+        <Text style={styles.textStyle}>{message}</Text>
+      </View>
+      <Text style={{ fontSize: 16, color: '#555', marginBottom: 10, paddingHorizontal: 20 }}>
+        Here you can see the latest images uploaded by our users. Feel free to use the camera to share your own positive moments!
+      </Text>
+      {images.map((image) => (
+        <View style={styles.imageContainer} key={image.id}>
+          <Image
+            key={image.id}
+            source={{ uri: pb.files.getURL(image, image.image) }}
+            style={styles.imageStyle} />
         </View>
-        <View style={styles.imageContainer}>
-
-          {image1 && <Image 
-          source={{ uri: image1 }} 
-          style={styles.imageStyle} />}
-
-        </View>
-        <View style={styles.imageContainer}>
-         
-          {image2 && <Image 
-          source={{ uri: image2 }} 
-          style={styles.imageStyle} />}
-          
-        </View>
-        <StatusBar style="auto" />
-     
+      ))}
+      <StatusBar style="auto" />
     </ScrollView>
   );
 }

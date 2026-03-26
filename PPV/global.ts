@@ -45,7 +45,7 @@ export const styles = StyleSheet.create({
   },
   imageStyle: {
     flex: 1,
-    height: 200,
+    height: 300,
     borderRadius: 15,
   },
   imageContainer: {
