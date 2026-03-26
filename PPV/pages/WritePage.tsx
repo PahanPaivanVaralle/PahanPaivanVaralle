@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TextInput, Button, ImageBackground } from 'react-native';
 import PocketBase from 'pocketbase';
 import { styles } from '../global';
@@ -20,6 +20,17 @@ export default function WritePage() {
     }
   };
 
+  const handleChange = (e: string) => {
+    if (!e) return;
+    e = e.replace(/[\r\n]+/g, '\n');
+
+    const lines = e.split('\n');
+    if (lines.length > 10) {
+      return;
+    }
+    setMessage(e);
+  };
+
   return (
     <KeyboardAwareScrollView>
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
@@ -27,8 +38,9 @@ export default function WritePage() {
           <TextInput
             maxLength={256}
             multiline={true}
+            numberOfLines={10}
             value={message}
-            onChangeText={setMessage}
+            onChangeText={handleChange}
             placeholder="Write your positive message here..."
           />
         </View>
