@@ -213,4 +213,43 @@ export const styles = StyleSheet.create({
   locateIcon: {
     fontSize: 26,
   },
+  streakBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: '#ff6f00',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  streakBadgeDead: {
+    backgroundColor: '#757575',
+  },
+  streakText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  taskBanner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(46,125,50,0.92)',
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  taskBannerText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  previewBtnSuccess: {
+    backgroundColor: '#2e7d32',
+  },
 });
