@@ -8,15 +8,17 @@ import {
   Image,
   Text,
 } from 'react-native';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { distanceMetres, TaskMarker } from '../utils/streak';
 import { Platform } from 'react-native';
 
 interface ImageRecord {
@@ -26,7 +28,28 @@ interface ImageRecord {
 
 export default function Camera() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const [taskMarkers, setTaskMarkers] = useState<TaskMarker[]>([]);
+  const [pendingTask, setPendingTask] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Pick up task from navigation params (from Map's "Suorita" button)
+  useEffect(() => {
+    const { taskId, taskTitle } = route.params ?? {};
+    if (taskId) {
+      setPendingTask({ id: taskId, title: taskTitle ?? 'Tehtävä' });
+      navigation.setParams({ taskId: undefined, taskTitle: undefined });
+    }
+  }, [route.params?.taskId]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('ppv_task_markers').then((raw) => {
+      if (raw) setTaskMarkers(JSON.parse(raw) as TaskMarker[]);
+    });
+  }, []);
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
@@ -35,7 +58,7 @@ export default function Camera() {
   const askDestination = (uri: string) => setPreviewUri(uri);
   const closePreview = () => setPreviewUri(null);
 
-  const uploadAndNavigate = async (uri: string) => {
+  const uploadAndNavigate = async (uri: string, forceTaskId?: string) => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
@@ -47,18 +70,64 @@ export default function Camera() {
     const loc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.High,
     });
+    const { latitude: la, longitude: lo } = loc.coords;
+
+    // Find the target task and always enforce the 10m distance check
+    const targetTask = forceTaskId
+      ? (taskMarkers.find((t) => t.id === forceTaskId) ?? null)
+      : null;
+
+    if (targetTask) {
+      const dist = distanceMetres(la, lo, targetTask.la, targetTask.lo);
+      if (dist > 10) {
+        Alert.alert(
+          'Liian kaukana!',
+          `Olet ${Math.round(dist)} metrin päässä tehtävästä. Siirry lähemmäs tehtävää.`,
+        );
+        return;
+      }
+    }
+
+    // Auto-detect nearby task if no explicit task selected
+    const nearbyTask =
+      targetTask ??
+      taskMarkers.find((t) => distanceMetres(la, lo, t.la, t.lo) <= 10) ??
+      null;
+
     setUploading(true);
     try {
-      const { latitude: la, longitude: lo } = loc.coords;
       const fd = new FormData();
       fd.append('image', { uri, name: 'photo.jpg', type: 'image/jpeg' } as any);
       const img = await pb.collection<ImageRecord>('images').create(fd);
       const rec = await pb
         .collection('map_markers')
         .create({ lang: la, long: lo, image: img.id });
-      navigation.navigate('Map', {
-        newMarker: { la, lo, url: pb.files.getURL(img, img.image), id: rec.id },
-      } as never);
+
+      if (nearbyTask) {
+        Alert.alert(
+          'Tehtävä suoritettu! 🎉',
+          `"${nearbyTask.title}" on merkitty tehdyksi.`,
+        );
+        navigation.navigate('Map', {
+          newMarker: {
+            la,
+            lo,
+            url: pb.files.getURL(img, img.image),
+            id: rec.id,
+          },
+          completedTaskId: nearbyTask.id,
+          completedImageUrl: pb.files.getURL(img, img.image),
+        } as never);
+      } else {
+        navigation.navigate('Map', {
+          newMarker: {
+            la,
+            lo,
+            url: pb.files.getURL(img, img.image),
+            id: rec.id,
+          },
+        } as never);
+      }
     } catch {
       Alert.alert('Virhe', 'Kuvan tallennus epäonnistui.');
     } finally {
@@ -122,10 +191,14 @@ export default function Camera() {
   return (
     <View style={styles.CameraContainer}>
       <CameraView ref={ref} style={styles.camera} facing={facing} />
+      {pendingTask && (
+        <View style={styles.taskBanner}>
+          <Text style={styles.taskBannerText}>🎯 {pendingTask.title}</Text>
+        </View>
+      )}
       <View
         style={{
-          paddingBottom:
-            insets.bottom + 40,
+          paddingBottom: insets.bottom + 40,
           position: 'absolute',
           flexDirection: 'row',
           bottom: 25,
@@ -177,27 +250,49 @@ export default function Camera() {
           <View style={styles.previewActions}>
             <TouchableOpacity
               style={styles.previewBtn}
-              onPress={closePreview}
+              onPress={() => {
+                closePreview();
+              }}
               disabled={uploading}
             >
               <Ionicons name="arrow-back" size={24} color="#fff" />
               <Text style={styles.previewBtnText}>Peruuta</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.previewBtn, styles.previewBtnPrimary]}
-              onPress={() => {
-                closePreview();
-                uploadAndNavigate(previewUri!);
-              }}
-              disabled={uploading}
-            >
-              {uploading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Ionicons name="map" size={24} color="#fff" />
-              )}
-              <Text style={styles.previewBtnText}>Kartta</Text>
-            </TouchableOpacity>
+            {pendingTask ? (
+              <TouchableOpacity
+                style={[styles.previewBtn, styles.previewBtnSuccess]}
+                onPress={() => {
+                  const tid = pendingTask.id;
+                  setPendingTask(null);
+                  closePreview();
+                  uploadAndNavigate(previewUri!, tid);
+                }}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                )}
+                <Text style={styles.previewBtnText}>Suorita</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.previewBtn, styles.previewBtnPrimary]}
+                onPress={() => {
+                  closePreview();
+                  uploadAndNavigate(previewUri!);
+                }}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Ionicons name="map" size={24} color="#fff" />
+                )}
+                <Text style={styles.previewBtnText}>Kartta</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[styles.previewBtn, styles.previewBtnSecondary]}
               onPress={() => {
