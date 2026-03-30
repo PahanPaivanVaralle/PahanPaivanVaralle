@@ -249,4 +249,52 @@ export const styles = StyleSheet.create({
   previewBtnSuccess: {
     backgroundColor: '#2e7d32',
   },
+
+  // Settings
+  settingsContainer: {
+    padding: 24,
+    gap: 24,
+  },
+  settingsSection: {
+    gap: 12,
+  },
+  settingsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  settingsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#555',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 16,
+  },
+  settingsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  settingsCard: {
+    width: '47%',
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 2.5,
+    borderColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  settingsCardActive: {
+    borderColor: '#333',
+  },
+  settingsPreview: {
+    height: 64,
+  },
+  settingsLabel: {
+    padding: 10,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
+  },
 });
