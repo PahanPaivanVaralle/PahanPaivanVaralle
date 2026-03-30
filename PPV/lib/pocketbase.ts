@@ -1,14 +1,19 @@
 import PocketBase from 'pocketbase';
-import DeviceInfo from 'react-native-device-info';
+import { Platform } from 'react-native';
 
 const PB_URL = 'https://pocketbase.misteri.fi';
 export const pb = new PocketBase(PB_URL);
 
 pb.autoCancellation(false);
 
-let cachedUserID = "";
+const DeviceInfo =
+  Platform.OS === 'ios' ? null : require('react-native-device-info');
+
+let cachedUserID = '';
 
 export async function getUserID() {
+  if (Platform.OS === 'ios') return null;
+
   if (cachedUserID) return cachedUserID;
 
   cachedUserID = await DeviceInfo.getUniqueId();
@@ -16,6 +21,8 @@ export async function getUserID() {
 }
 
 export async function Login() {
+  if (Platform.OS === 'ios') return;
+
   if (!cachedUserID) await getUserID();
 
   const data = {
@@ -23,7 +30,8 @@ export async function Login() {
     username: await DeviceInfo.getDeviceName(),
     device_name: await DeviceInfo.getDeviceName(),
     device_manufacturer: await DeviceInfo.getManufacturer(),
-    device_os_version: DeviceInfo.getSystemName() + " " + DeviceInfo.getSystemVersion(),
+    device_os_version:
+      DeviceInfo.getSystemName() + " " + DeviceInfo.getSystemVersion(),
     last_ip: await DeviceInfo.getIpAddress(),
   };
 
