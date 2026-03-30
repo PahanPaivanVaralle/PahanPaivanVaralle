@@ -4,6 +4,7 @@ import BottomBar from './components/navbar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Appearance } from 'react-native';
 import { useEffect } from 'react';
+import { Login } from './lib/pocketbase';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ function RootStack() {
 export default function App() {
   useEffect(() => {
     Appearance.setColorScheme('dark');
+    Login();
   }, []);
 
   return (
