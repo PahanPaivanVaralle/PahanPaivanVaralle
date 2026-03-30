@@ -1,6 +1,16 @@
-import PocketBase from "pocketbase";
+import PocketBase from 'pocketbase';
+import DeviceInfo from 'react-native-device-info';
 
-export const PB_URL = "https://pocketbase.misteri.fi";
-
+const PB_URL = 'https://pocketbase.misteri.fi';
 export const pb = new PocketBase(PB_URL);
+
 pb.autoCancellation(false);
+
+let cachedUserID = "";
+
+export async function getUserID() {
+  if (cachedUserID) return cachedUserID;
+
+  cachedUserID = await DeviceInfo.getUniqueId();
+  return cachedUserID;
+}

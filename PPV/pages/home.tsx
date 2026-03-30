@@ -1,12 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, ImageBackground, ScrollView } from 'react-native';
 import { styles } from '../global';
-import PocketBase, { RecordModel } from 'pocketbase';
+import { RecordModel } from 'pocketbase';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-
-const pb = new PocketBase('https://pocketbase.misteri.fi');
+import { pb } from "../lib/pocketbase"
 
 export default function Home() {
   const [message, setMessage] = useState('');
@@ -24,7 +23,6 @@ export default function Home() {
       const result = await pb.collection('messages').getList(page, 1);
 
       const randomMessage = result.items[0];
-
       setMessage(randomMessage.msg);
     } catch (err) {
       console.log('Error fetching positive message:', err);
