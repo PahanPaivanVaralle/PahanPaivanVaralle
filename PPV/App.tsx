@@ -4,6 +4,7 @@ import BottomBar from './components/navbar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Appearance } from 'react-native';
 import { useEffect } from 'react';
+import { ThemeProvider, useTheme } from './lib/ThemeContext';
 import { Login } from './lib/pocketbase';
 
 const Stack = createNativeStackNavigator();
@@ -29,6 +30,17 @@ function RootStack() {
   );
 }
 
+function ThemedApp() {
+  const { theme } = useTheme();
+  return (
+    <NavigationContainer theme={MyTheme}>
+      <LinearGradient colors={theme.gradient} style={{ flex: 1 }}>
+        <RootStack />
+      </LinearGradient>
+    </NavigationContainer>
+  );
+}
+
 export default function App() {
   useEffect(() => {
     Appearance.setColorScheme('dark');
@@ -36,13 +48,8 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer theme={MyTheme}>
-      <LinearGradient
-        colors={['rgba(181, 218, 206, 1)', 'rgba(236, 192, 209, 1)']}
-        style={{ flex: 1 }}
-      >
-        <RootStack />
-      </LinearGradient>
-    </NavigationContainer>
+    <ThemeProvider>
+      <ThemedApp />
+    </ThemeProvider>
   );
 }
