@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Appearance } from 'react-native';
 import { useEffect } from 'react';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
+import { Login } from './lib/pocketbase';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +44,7 @@ function ThemedApp() {
 export default function App() {
   useEffect(() => {
     Appearance.setColorScheme('dark');
+    Login();
   }, []);
 
   return (
