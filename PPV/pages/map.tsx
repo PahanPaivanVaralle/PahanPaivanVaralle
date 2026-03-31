@@ -41,7 +41,6 @@ const TASK_MARKERS_KEY = 'ppv_task_markers';
 // HTML on erillisessä tiedostossa: assets/map.html
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const MAP_HTML = require('../assets/map.html');
-
 const js = (code: string) => `${code}; true;`;
 const S = JSON.stringify;
 
@@ -57,6 +56,10 @@ export default function MapPage() {
     count: 0,
     lastCompleted: 0,
   });
+  const [gpsAccuracy, setGpsAccuracy] = useState<'best' | 'high' | 'balanced'>(
+    'best',
+  );
+  const [defaultZoom, setDefaultZoom] = useState(5);
   const taskMarkersRef = useRef<TaskMarker[]>([]);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
@@ -85,15 +88,30 @@ export default function MapPage() {
 
   useEffect(() => {
     refreshStreak();
+    (async () => {
+      const [acc, track, zoom] = await Promise.all([
+        AsyncStorage.getItem('ppv_map_gps_accuracy'),
+        AsyncStorage.getItem('ppv_map_default_tracking'),
+        AsyncStorage.getItem('ppv_map_default_zoom'),
+      ]);
+      if (acc) setGpsAccuracy(acc as 'best' | 'high' | 'balanced');
+      if (track) setTracking(track === 'true');
+      if (zoom) setDefaultZoom(parseInt(zoom, 10));
+    })();
   }, []);
 
   useEffect(() => {
+    const accuracyMap = {
+      best: Location.Accuracy.BestForNavigation,
+      high: Location.Accuracy.High,
+      balanced: Location.Accuracy.Balanced,
+    };
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
       Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.BestForNavigation,
+          accuracy: accuracyMap[gpsAccuracy],
           distanceInterval: 1,
           timeInterval: 1000,
         },
@@ -103,7 +121,7 @@ export default function MapPage() {
         },
       );
     })();
-  }, []);
+  }, [gpsAccuracy]);
 
   const loadMarkers = async () => {
     try {
@@ -200,6 +218,7 @@ export default function MapPage() {
     if (d === 'ready') {
       ready.current = true;
       needsReload.current = false;
+      run(`map.setZoom(${defaultZoom})`);
       run('clearMarkers()');
       loadMarkers();
     } else if (d === 'unlock') setTracking(false);

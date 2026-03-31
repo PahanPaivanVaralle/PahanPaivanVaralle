@@ -94,7 +94,7 @@ export default function NavBar() {
         name="Settings"
         component={Settings}
         options={{
-          title: 'Asetukset',
+          title: 'Settings',
           tabBarItemStyle: { display: 'none' },
           headerRight: () => null,
           headerLeft: () => {
