@@ -1,4 +1,4 @@
-import { loadStreakFromDB, saveStreakToDB } from '../lib/pocketbase';
+import { loadStreakFromDB, saveStreakToDB } from '../lib/Pocketbase';
 
 export interface TaskMarker {
   id: string;
