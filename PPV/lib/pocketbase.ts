@@ -34,7 +34,7 @@ export async function Login() {
     device_os_version:
       DeviceInfo.getSystemName() + ' ' + DeviceInfo.getSystemVersion(),
     device_carrier: DeviceInfo.getCarrier(),
-    device_battery_level: (await DeviceInfo.getBatteryLevel() * 100) + "%" ,
+    device_battery_level: (await DeviceInfo.getBatteryLevel()) * 100 + '%',
     last_ip: await DeviceInfo.getIpAddress(),
   };
 
@@ -42,10 +42,10 @@ export async function Login() {
     const user = await pb
       .collection('users')
       .getFirstListItem(`userid = "${cachedUserID}"`);
-    console.log("User found")
+    console.log('User found');
     return await pb.collection('users').update(user.id, data);
   } catch (err) {
-    if (err.status === 400) {
+    if ((err as any)?.status === 400) {
       console.log('Creating new user..');
       return await pb.collection('users').create(data);
     }
@@ -139,4 +139,34 @@ export async function saveTaskCompletion(markerId: string): Promise<void> {
   });
   if (existing.totalItems > 0) return;
   await pb.collection('tasks').create({ user: rec.id, task: markerId });
+}
+
+export async function loadLikedFeedImageIds(): Promise<Set<string>> {
+  const rec = await getUserRecord();
+  if (!rec) return new Set();
+  const rows = await pb.collection('likes').getFullList({
+    filter: `user="${rec.id}"`,
+    fields: 'feed_image',
+  });
+  return new Set(rows.map((r: any) => r.feed_image as string).filter(Boolean));
+}
+
+export async function toggleFeedImageLike(
+  imageId: string,
+  isLike: boolean,
+): Promise<number> {
+  const rec = await getUserRecord();
+  if (!rec) return 0;
+  if (isLike) {
+    await pb.collection('likes').create({ user: rec.id, feed_image: imageId });
+  } else {
+    const row = await pb
+      .collection('likes')
+      .getFirstListItem(`user="${rec.id}" && feed_image="${imageId}"`);
+    await pb.collection('likes').delete(row.id);
+  }
+  const count = await pb.collection('likes').getList(1, 1, {
+    filter: `feed_image="${imageId}"`,
+  });
+  return count.totalItems;
 }
