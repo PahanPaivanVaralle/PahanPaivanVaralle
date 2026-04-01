@@ -1,16 +1,20 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, ImageBackground, ScrollView } from 'react-native';
+import { Text, View, Image, ImageBackground, ScrollView, TextInput, Button, Pressable } from 'react-native';
 import { styles } from '../global';
-import { RecordModel } from 'pocketbase';
-
+import PocketBase, { RecordModel } from 'pocketbase';
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { pb } from "../lib/pocketbase"
+import { Ionicons } from '@expo/vector-icons';
+import CommentModal from './comment';
+
+const pb = new PocketBase('https://pocketbase.misteri.fi');
 
 export default function Home() {
   const [message, setMessage] = useState('');
   const [images, setImages] = useState<RecordModel[]>([]);
-  
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+
+
 
   const fetchMessage = async () => {
     try {
@@ -58,12 +62,25 @@ export default function Home() {
       </Text>
       {images.map((image) => (
         <View style={styles.imageContainer} key={image.id}>
+
           <Image
-            key={image.id}
             source={{ uri: pb.files.getURL(image, image.image) }}
-            style={styles.imageStyle} />
-        </View>
+            style={styles.imageStyle}
+          />
+
+
+      <Pressable onPress={() => setSelectedImageId(image.id)}>
+        <Ionicons name="chatbubble-ellipses-outline" size={40} color="black"/>
+      </Pressable>
+
+      <CommentModal
+        visible={selectedImageId === image.id}
+        onClose={() => setSelectedImageId(null)}
+        imageId={image.id}
+      />
+      </View>
       ))}
+
       <StatusBar style="auto" />
     </ScrollView>
   );
