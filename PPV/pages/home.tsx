@@ -4,10 +4,9 @@ import { styles } from '../global';
 import PocketBase, { RecordModel } from 'pocketbase';
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { pb } from "../lib/Pocketbase"
 import { Ionicons } from '@expo/vector-icons';
 import CommentModal from './comment';
-
-const pb = new PocketBase('https://pocketbase.misteri.fi');
 
 export default function Home() {
   const [message, setMessage] = useState('');
