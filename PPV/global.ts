@@ -371,4 +371,38 @@ export const styles = StyleSheet.create({
     minWidth: 24,
     textAlign: 'center',
   },
+  settingsNameInput: {
+    borderWidth: 1.5,
+    borderColor: '#bbb',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    color: '#333',
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  settingsSaveBtn: {
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#999',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  settingsSaveBtnSaved: {
+    borderColor: '#1a7a3f',
+    backgroundColor: 'rgba(26,122,63,0.1)',
+  },
+  settingsSaveBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  settingsSaveBtnTextSaved: {
+    color: '#1a7a3f',
+  },
 });
