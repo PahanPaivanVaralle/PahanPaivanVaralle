@@ -14,7 +14,7 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { pb } from '../lib/pocketbase';
+import { pb } from '../lib/Pocketbase';
 import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { distanceMetres, TaskMarker } from '../utils/streak';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, TextInput, Button, ImageBackground } from 'react-native';
-import { pb } from '../lib/pocketbase';
+import { pb } from '../lib/Pocketbase';
 import { styles } from '../global';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
