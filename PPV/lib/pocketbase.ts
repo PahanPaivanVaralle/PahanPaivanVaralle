@@ -3,7 +3,6 @@ import { Platform } from 'react-native';
 
 const PB_URL = 'https://pocketbase.misteri.fi';
 export const pb = new PocketBase(PB_URL);
-
 pb.autoCancellation(false);
 
 const DeviceInfo =
@@ -25,23 +24,30 @@ export async function Login() {
 
   if (!cachedUserID) await getUserID();
 
+  const deviceName = await DeviceInfo.getDeviceName();
+
   const data = {
     userid: cachedUserID,
-    username: await DeviceInfo.getDeviceName(),
-    device_name: await DeviceInfo.getDeviceName(),
+    username: deviceName,
+    device_name: deviceName,
     device_manufacturer: await DeviceInfo.getManufacturer(),
     device_os_version:
-      DeviceInfo.getSystemName() + " " + DeviceInfo.getSystemVersion(),
+      DeviceInfo.getSystemName() + ' ' + DeviceInfo.getSystemVersion(),
+    device_carrier: DeviceInfo.getCarrier(),
+    device_battery_level: (await DeviceInfo.getBatteryLevel() * 100) + "%" ,
     last_ip: await DeviceInfo.getIpAddress(),
   };
 
   try {
-    return await pb.collection('users').create(data);
+    const user = await pb
+      .collection('users')
+      .getFirstListItem(`userid = "${cachedUserID}"`);
+    console.log("User found")
+    return await pb.collection('users').update(user.id, data);
   } catch (err) {
     if (err.status === 400) {
-      return await pb
-        .collection('users')
-        .getFirstListItem(`userid="${cachedUserID}"`);
+      console.log('Creating new user..');
+      return await pb.collection('users').create(data);
     }
     throw err;
   }

@@ -8,7 +8,7 @@ import {
   useNavigation,
 } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { pb } from '../lib/pocketbase';
+import { pb } from '../lib/Pocketbase';
 import { styles } from '../global';
 import {
   loadStreak,

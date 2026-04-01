@@ -5,7 +5,7 @@ import { RecordModel } from 'pocketbase';
 
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { pb } from "../lib/pocketbase"
+import { pb } from "../lib/Pocketbase"
 
 export default function Home() {
   const [message, setMessage] = useState('');
