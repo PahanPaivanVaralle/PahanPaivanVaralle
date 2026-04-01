@@ -8,11 +8,18 @@ import {
   useNavigation,
 } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { pb } from '../lib/pocketbase';
+import {
+  pb,
+  loadLikedMarkerIds,
+  toggleMarkerLike,
+  loadStreakFromDB,
+  saveStreakToDB,
+  loadCompletedTaskIds,
+  saveTaskCompletion,
+} from '../lib/pocketbase';
 import { styles } from '../global';
 import {
-  loadStreak,
-  recordTaskCompletion,
+  recordTaskCompletionDB,
   isStreakAlive,
   StreakData,
   TaskMarker,
@@ -35,11 +42,6 @@ interface MapMarkerRecord {
   expand?: { image?: ImageRecord };
 }
 
-const LIKED_KEY = 'ppv_liked_markers';
-const TASK_MARKERS_KEY = 'ppv_task_markers';
-
-// HTML on erillisessä tiedostossa: assets/map.html
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const MAP_HTML = require('../assets/map.html');
 const js = (code: string) => `${code}; true;`;
 const S = JSON.stringify;
@@ -69,21 +71,8 @@ export default function MapPage() {
   const run = (code: string) => webRef.current?.injectJavaScript(js(code));
 
   const refreshStreak = async () => {
-    const s = await loadStreak();
+    const s = await loadStreakFromDB();
     setStreak(s);
-  };
-
-  const saveLiked = async () => {
-    await AsyncStorage.setItem(LIKED_KEY, JSON.stringify([...liked.current]));
-  };
-
-  const loadLiked = async () => {
-    const raw = await AsyncStorage.getItem(LIKED_KEY);
-    if (raw) {
-      const ids: string[] = JSON.parse(raw);
-      liked.current = new Set(ids);
-      run(`setLikedIds(${S(ids)})`);
-    }
   };
 
   useEffect(() => {
@@ -125,17 +114,15 @@ export default function MapPage() {
 
   const loadMarkers = async () => {
     try {
-      await loadLiked();
+      liked.current = await loadLikedMarkerIds();
+      run(`setLikedIds(${S([...liked.current])})`);
+      const completedIds = await loadCompletedTaskIds();
       const { items } = await pb
         .collection('map_markers')
         .getList<MapMarkerRecord>(1, 500, {
           sort: '-created',
           expand: 'image',
         });
-      const rawCompletions = await AsyncStorage.getItem('ppv_task_completions');
-      const completions: Record<string, string> = rawCompletions
-        ? JSON.parse(rawCompletions)
-        : {};
       const tasks: TaskMarker[] = [];
       items.forEach((r) => {
         const img = r.expand?.image;
@@ -145,8 +132,8 @@ export default function MapPage() {
           run(
             `addTaskMarker(${r.lang},${r.long},${S(r.title)},${S(r.icon || 'location')},${S(r.color || '#3388ff')},${S(r.desc || '')},${S(url)},${S(r.id)},${r.likes ?? 0})`,
           );
-          if (liked.current.has(r.id) && completions[r.id]) {
-            run(`completeTaskMarkerUI(${S(r.id)},${S(completions[r.id])})`);
+          if (liked.current.has(r.id) && completedIds.has(r.id)) {
+            run(`completeTaskMarkerUI(${S(r.id)},${S('')})`);
           }
         } else if (img) {
           run(
@@ -155,31 +142,19 @@ export default function MapPage() {
         }
       });
       taskMarkersRef.current = tasks;
-      await AsyncStorage.setItem(TASK_MARKERS_KEY, JSON.stringify(tasks));
     } catch (e) {
       console.error('Markkereiden lataus epäonnistui:', e);
     }
   };
 
   const handleToggle = (markerId: string, isLike: boolean) => {
-    const delta = isLike ? 1 : -1;
     if (isLike) liked.current.add(markerId);
     else liked.current.delete(markerId);
-    saveLiked();
-    pb.collection('map_markers')
-      .getOne(markerId)
-      .then((rec) => {
-        const n = Math.max(0, ((rec.likes as number) ?? 0) + delta);
-        return pb
-          .collection('map_markers')
-          .update(markerId, { likes: n })
-          .then(() => n);
-      })
+    toggleMarkerLike(markerId, isLike)
       .then((n) => run(`updateLikes(${S(markerId)},${n},${isLike})`))
       .catch((e) => {
         if (isLike) liked.current.delete(markerId);
         else liked.current.add(markerId);
-        saveLiked();
         console.error('Tykkäys epäonnistui:', e);
       });
   };
@@ -190,26 +165,11 @@ export default function MapPage() {
   ) => {
     if (!liked.current.has(markerId)) {
       liked.current.add(markerId);
-      saveLiked();
-      pb.collection('map_markers')
-        .getOne(markerId)
-        .then((rec) => {
-          const n = Math.max(0, ((rec.likes as number) ?? 0) + 1);
-          return pb.collection('map_markers').update(markerId, { likes: n });
-        })
-        .catch(console.error);
+      toggleMarkerLike(markerId, true).catch(console.error);
     }
-    const rawCompletions = await AsyncStorage.getItem('ppv_task_completions');
-    const completions: Record<string, string> = rawCompletions
-      ? JSON.parse(rawCompletions)
-      : {};
-    completions[markerId] = imgUrl;
-    await AsyncStorage.setItem(
-      'ppv_task_completions',
-      JSON.stringify(completions),
-    );
+    await saveTaskCompletion(markerId);
     run(`completeTaskMarkerUI(${S(markerId)},${S(imgUrl)})`);
-    const updated = await recordTaskCompletion();
+    const updated = await recordTaskCompletionDB();
     setStreak(updated);
   };
 
@@ -313,7 +273,7 @@ export default function MapPage() {
         <TouchableOpacity
           style={[styles.streakBadge, !streakAlive && styles.streakBadgeDead]}
           onLongPress={async () => {
-            await AsyncStorage.removeItem('ppv_streak');
+            await saveStreakToDB(0, 0);
             setStreak({ count: 0, lastCompleted: 0 });
           }}
         >

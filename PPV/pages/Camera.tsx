@@ -17,7 +17,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { distanceMetres, TaskMarker } from '../utils/streak';
 import { Platform } from 'react-native';
 
@@ -46,9 +45,19 @@ export default function Camera() {
   }, [route.params?.taskId]);
 
   useEffect(() => {
-    AsyncStorage.getItem('ppv_task_markers').then((raw) => {
-      if (raw) setTaskMarkers(JSON.parse(raw) as TaskMarker[]);
-    });
+    pb.collection('map_markers')
+      .getFullList({ filter: 'title != ""', fields: 'id,lang,long,title' })
+      .then((rows) =>
+        setTaskMarkers(
+          rows.map((r: any) => ({
+            id: r.id,
+            la: r.lang,
+            lo: r.long,
+            title: r.title,
+          })),
+        ),
+      )
+      .catch(console.error);
   }, []);
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
