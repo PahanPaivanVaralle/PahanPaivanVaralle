@@ -27,7 +27,6 @@ export default function Home() {
       const result = await pb.collection('messages').getList(page, 1);
 
       const randomMessage = result.items[0];
-
       setMessage(randomMessage.msg);
     } catch (err) {
       console.log('Error fetching positive message:', err);

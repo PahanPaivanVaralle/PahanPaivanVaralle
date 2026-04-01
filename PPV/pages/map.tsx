@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, Alert } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
 import {
@@ -16,6 +16,7 @@ import {
   isStreakAlive,
   StreakData,
   TaskMarker,
+  distanceMetres,
 } from '../utils/streak';
 
 interface ImageRecord {
@@ -34,50 +35,12 @@ interface MapMarkerRecord {
   expand?: { image?: ImageRecord };
 }
 
-const TILE_KEY = 'O5UEYayzmhespubk3jjK';
 const LIKED_KEY = 'ppv_liked_markers';
 const TASK_MARKERS_KEY = 'ppv_task_markers';
 
-const LEAFLET_HTML = `<!DOCTYPE html><html><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
-<script type="module" src="https://unpkg.com/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"><\/script>
-<style>
-html,body,#map{height:100%;margin:0;padding:0}
-.popup{min-width:280px} .gallery{display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto}
-.gallery img{width:260px;max-height:260px;object-fit:cover;border-radius:10px}
-.cnt{background:#3388ff;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;position:absolute;top:-4px;right:-4px;pointer-events:none}
-.mw{position:relative;width:36px;height:36px}
-.lbtn{background:none;border:1px solid #e0aab0;cursor:pointer;font-size:13px;color:#c0392b;padding:3px 10px;border-radius:12px;margin-top:6px;display:inline-block;transition:background .2s}
-.lbtn.on{background:#fde8e8;border-color:#c0392b}
-.cbtn{background:none;border:1px solid #8bc34a;cursor:pointer;font-size:13px;color:#388e3c;padding:3px 10px;border-radius:12px;margin-top:6px;display:inline-block;transition:background .2s}
-.cbtn.on{background:#e8f5e9;border-color:#388e3c}
-.pe{display:flex;flex-direction:column;align-items:flex-start}
-.sbtn{background:#1b5e20;border:none;cursor:pointer;font-size:13px;color:#fff;padding:6px 14px;border-radius:12px;margin-top:8px;display:inline-block}
-</style></head><body><div id="map"></div><script>
-var map=L.map('map',{maxZoom:22}).setView([64.5,26],5),msg=function(s){window.ReactNativeWebView&&window.ReactNativeWebView.postMessage(s)};
-L.tileLayer('https://api.maptiler.com/maps/streets/256/{z}/{x}/{y}.png?key=${TILE_KEY}',{maxZoom:22,maxNativeZoom:19}).addTo(map);
-var gps=L.circleMarker([64.5,26],{radius:10,color:'#fff',fillColor:'#3388ff',fillOpacity:1,weight:3}).addTo(map).bindPopup("Sijaintisi");
-var C={},T={},liked=new Set(),fl=true,tr=false;
-var ck=function(a,b){return parseFloat(a).toFixed(5)+','+parseFloat(b).toFixed(5)};
-document.addEventListener('click',function(ev){var btn=ev.target.closest('[data-toggle]');if(btn){var id=btn.getAttribute('data-toggle');msg((liked.has(id)?'unlike:':'like:')+id);return;}var dbtn=ev.target.closest('[data-do-task]');if(dbtn){msg('do-task:'+dbtn.getAttribute('data-do-task'));}});
-var photoHTML=function(e){var l=liked.has(e.markerId),c=l?'lbtn on':'lbtn',h=l?'\\u2764\\ufe0f':'\\u2661';return'<img src="'+e.imageUrl+'"/><button class="'+c+'" data-toggle="'+e.markerId+'">'+h+' '+e.likes+'</button>'};
-var galleryHTML=function(a){var n=a.length>1?'<div style="font-size:12px;color:#666;margin-bottom:6px">'+a.length+' kuvaa</div>':'';return'<div class="popup"><div class="gallery">'+n+a.map(function(e){return'<div class="pe">'+photoHTML(e)+'</div>'}).join('')+'</div></div>'};
-var taskHTML=function(t,d,img,id,lk){var h='<b>'+t+'</b>';if(d)h+='<br><span style="font-size:13px;color:#555">'+d+'</span>';var l=liked.has(id);if(l){if(img)h+='<br><img src="'+img+'" style="width:200px;max-height:200px;object-fit:cover;border-radius:8px;margin-top:8px"/>';h+='<br><span style="color:#2e7d32;font-weight:bold">\u2705 Teht\u00e4v\u00e4 suoritettu!</span>';}else{h+='<br><button class="sbtn" data-do-task="'+id+'">\ud83d\udcf7 Suorita teht\u00e4v\u00e4</button>';}return h};
-var mkI=function(n){var b=n>1?'<div class="cnt">'+n+'</div>':'';return L.divIcon({html:'<div class="mw"><div style="background:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.35)">\\ud83d\\udcf7</div>'+b+'</div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''})};
-var mkT=function(ic,co){return L.divIcon({html:'<div style="background:'+(co||'#fff')+';border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)"><ion-icon name="'+ic+'" style="font-size:20px;color:#fff"></ion-icon></div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''})};
-var addTaskMarker=function(la,lo,t,ic,co,d,img,id,lk){var m=L.marker([la,lo],{icon:mkT(ic||'location',co||'#3388ff')}).addTo(map).bindPopup(taskHTML(t,d,img,id,lk),{maxWidth:240});T[id]={marker:m,t:t,d:d,img:img,lk:lk}};
-var addPhotoToCluster=function(la,lo,url,id,lk){var e={imageUrl:url,markerId:id,likes:lk},fk=null;for(var k in C){var dr=(C[k].la-la)*Math.PI/180,dc=(C[k].lo-lo)*Math.PI/180,mr=(C[k].la+la)/2*Math.PI/180,dx=dc*Math.cos(mr)*6371000,dy=dr*6371000;if(Math.sqrt(dx*dx+dy*dy)<20){fk=k;break}}if(fk){C[fk].entries.push(e);C[fk].marker.setIcon(mkI(C[fk].entries.length));C[fk].marker.setPopupContent(galleryHTML(C[fk].entries))}else{var nk=ck(la,lo),m=L.marker([la,lo],{icon:mkI(1)}).addTo(map).bindPopup(galleryHTML([e]),{maxWidth:300});C[nk]={marker:m,entries:[e],la:la,lo:lo}}};
-var completeTaskMarkerUI=function(id,imgUrl){liked.add(id);if(T[id]){T[id].img=imgUrl;var gi=L.divIcon({html:'<div style="background:#2e7d32;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)"><ion-icon name="checkmark" style="font-size:20px;color:#fff"></ion-icon></div>',iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-38],className:''});T[id].marker.setIcon(gi);T[id].marker.setPopupContent(taskHTML(T[id].t,T[id].d,imgUrl,id,T[id].lk));}};var clearMarkers=function(){for(var k in C)map.removeLayer(C[k].marker),delete C[k];for(var k in T)map.removeLayer(T[k].marker),delete T[k]};
-var setLikedIds=function(ids){liked=new Set(ids)};
-var updateLikes=function(id,n,on){if(on)liked.add(id);else liked.delete(id);if(T[id]){T[id].lk=n;}else{for(var k in C){var e=C[k].entries.find(function(x){return x.markerId===id});if(e){e.likes=n;break}}}var btn=document.querySelector('[data-toggle="'+id+'"]');if(btn){if(btn.classList.contains('lbtn')){if(on){btn.classList.add('on');btn.innerHTML='\\u2764\\ufe0f '+n;}else{btn.classList.remove('on');btn.innerHTML='\\u2661 '+n;}}else if(btn.classList.contains('cbtn')){if(on){btn.classList.add('on');btn.innerHTML='\\u2705 Tehty';}else{btn.classList.remove('on');btn.innerHTML='\\u2b1c Merkkaa tehdyksi';}}return;}if(T[id]){T[id].marker.setPopupContent(taskHTML(T[id].t,T[id].d,T[id].img,id,n));return;}for(var k in C){var e=C[k].entries.find(function(x){return x.markerId===id});if(e){C[k].marker.setPopupContent(galleryHTML(C[k].entries));return;}}};
-var updateLocation=function(la,lo){gps.setLatLng([la,lo]);if(fl){map.setView([la,lo],15);fl=false}else if(tr)map.panTo([la,lo])};
-var centerOnUser=function(){tr=true;map.setView(gps.getLatLng(),16)};
-map.on('dragstart',function(){if(tr){tr=false;msg('unlock')}});
-(function nr(){window.ReactNativeWebView?msg('ready'):setTimeout(nr,50)})();
-<\/script></body></html>`;
-
+// HTML on erillisessä tiedostossa: assets/map.html
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const MAP_HTML = require('../assets/map.html');
 const js = (code: string) => `${code}; true;`;
 const S = JSON.stringify;
 
@@ -93,6 +56,10 @@ export default function MapPage() {
     count: 0,
     lastCompleted: 0,
   });
+  const [gpsAccuracy, setGpsAccuracy] = useState<'best' | 'high' | 'balanced'>(
+    'best',
+  );
+  const [defaultZoom, setDefaultZoom] = useState(5);
   const taskMarkersRef = useRef<TaskMarker[]>([]);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
@@ -121,15 +88,30 @@ export default function MapPage() {
 
   useEffect(() => {
     refreshStreak();
+    (async () => {
+      const [acc, track, zoom] = await Promise.all([
+        AsyncStorage.getItem('ppv_map_gps_accuracy'),
+        AsyncStorage.getItem('ppv_map_default_tracking'),
+        AsyncStorage.getItem('ppv_map_default_zoom'),
+      ]);
+      if (acc) setGpsAccuracy(acc as 'best' | 'high' | 'balanced');
+      if (track) setTracking(track === 'true');
+      if (zoom) setDefaultZoom(parseInt(zoom, 10));
+    })();
   }, []);
 
   useEffect(() => {
+    const accuracyMap = {
+      best: Location.Accuracy.BestForNavigation,
+      high: Location.Accuracy.High,
+      balanced: Location.Accuracy.Balanced,
+    };
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
       Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.BestForNavigation,
+          accuracy: accuracyMap[gpsAccuracy],
           distanceInterval: 1,
           timeInterval: 1000,
         },
@@ -139,7 +121,7 @@ export default function MapPage() {
         },
       );
     })();
-  }, []);
+  }, [gpsAccuracy]);
 
   const loadMarkers = async () => {
     try {
@@ -236,6 +218,7 @@ export default function MapPage() {
     if (d === 'ready') {
       ready.current = true;
       needsReload.current = false;
+      run(`map.setZoom(${defaultZoom})`);
       run('clearMarkers()');
       loadMarkers();
     } else if (d === 'unlock') setTracking(false);
@@ -244,6 +227,22 @@ export default function MapPage() {
     else if (d.startsWith('do-task:')) {
       const taskId = d.slice(8);
       const task = taskMarkersRef.current.find((t) => t.id === taskId);
+      const loc = locRef.current;
+      if (task && loc) {
+        const dist = distanceMetres(
+          loc.coords.latitude,
+          loc.coords.longitude,
+          task.la,
+          task.lo,
+        );
+        if (dist > 20) {
+          Alert.alert(
+            'Liian kaukana!',
+            `Olet ${Math.round(dist)} metrin päässä tehtävästä. Siirry lähemmäs tehtävää.\n\n[debug] sinä: ${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}\ntehtävä: ${task.la}, ${task.lo}`,
+          );
+          return;
+        }
+      }
       navigation.navigate('Camera', {
         taskId,
         taskTitle: task?.title ?? 'Tehtävä',
@@ -292,7 +291,7 @@ export default function MapPage() {
     <View style={styles.mapContainer}>
       <WebView
         ref={webRef}
-        source={{ html: LEAFLET_HTML, baseUrl: 'https://unpkg.com' }}
+        source={MAP_HTML}
         style={styles.map}
         originWhitelist={['*']}
         mixedContentMode="always"

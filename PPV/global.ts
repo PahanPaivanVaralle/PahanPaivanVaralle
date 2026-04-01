@@ -260,4 +260,115 @@ export const styles = StyleSheet.create({
   previewBtnSuccess: {
     backgroundColor: '#2e7d32',
   },
+
+  // Settings
+  settingsContainer: {
+    padding: 24,
+    gap: 24,
+  },
+  settingsSection: {
+    gap: 12,
+  },
+  settingsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  settingsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#555',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 16,
+  },
+  settingsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  settingsCard: {
+    width: '47%',
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 2.5,
+    borderColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  settingsCardActive: {
+    borderColor: '#333',
+  },
+  settingsPreview: {
+    height: 64,
+  },
+  settingsLabel: {
+    padding: 10,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#333',
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  settingsRowLabel: {
+    fontSize: 15,
+    color: '#333',
+    fontWeight: '500',
+  },
+  settingsOptionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  settingsOptionBtn: {
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#bbb',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  settingsOptionBtnActive: {
+    borderColor: '#333',
+    backgroundColor: 'rgba(0,0,0,0.08)',
+  },
+  settingsOptionBtnText: {
+    fontSize: 13,
+    color: '#444',
+  },
+  settingsOptionBtnTextActive: {
+    fontWeight: '700',
+    color: '#111',
+  },
+  settingsStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingsStepperBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#bbb',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsStepperBtnText: {
+    fontSize: 18,
+    color: '#333',
+    lineHeight: 22,
+  },
+  settingsStepperValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    minWidth: 24,
+    textAlign: 'center',
+  },
 });
