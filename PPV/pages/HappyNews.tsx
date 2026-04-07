@@ -16,7 +16,11 @@ import { useHeaderHeight } from '@react-navigation/elements';
 export default function HappyNews() {
   const [news, setNews] = useState<FeedItem[]>([]);
   const [translatedTitles, setTranslatedTitles] = useState<{
-    [key: string]: string;
+    [key: string]: {
+      original: string;
+      translated: string;
+      isTranslated: boolean;
+    };
   }>({});
   const [translating, setTranslating] = useState(false);
   const headerHeight = useHeaderHeight();
@@ -30,8 +34,20 @@ export default function HappyNews() {
   }, []);
 
   const translateItem = async (item: FeedItem) => {
+    const existing = translatedTitles[item.id];
+
+    if (existing) {
+      setTranslatedTitles((prev) => ({
+        ...prev,
+        [item.id]: {
+          ...existing,
+          isTranslated: !existing.isTranslated,
+        },
+      }));
+      return;
+    }
     try {
-      if (translatedTitles[item.id] || translating) return;
+      if (translating) return;
       setTranslating(true);
       const res = await fetch('https://ppv.misteri.fi/translate', {
         method: 'POST',
@@ -50,9 +66,13 @@ export default function HappyNews() {
         }, '') || data.translatedText;
 
       setTranslatedTitles((prev) => ({
-        ...prev,
-        [item.id]: bestTranslation || item.title,
-      }));
+      ...prev,
+      [item.id]: {
+        original: item.title,
+        translated: bestTranslation || item.title,
+        isTranslated: true,
+      },
+    }));
       setTranslating(false);
     } catch (err) {
       console.log('Translate error:', err);
@@ -67,19 +87,27 @@ export default function HappyNews() {
       }}
     >
       {news.map((item) => {
-        const titleToShow = translatedTitles[item.id] || item.title;
+        const translation = translatedTitles[item.id];
+        const titleToShow = translation
+          ? translation.isTranslated
+            ? translation.translated
+            : translation.original
+          : item.title;
 
         return (
           <View key={item.id} style={styles.TextContainer}>
-            <Text
-              onPress={() =>
-                Linking.openURL(
-                  String(item.links.find((link) => link.url)?.url),
-                )
-              }
-            >
-              {titleToShow}
-            </Text>
+            <View style={styles.newsContainer}>
+              <Text style={styles.newsText}>{titleToShow}</Text>
+              <TouchableOpacity
+                style={styles.newsButton}
+                onPress={() =>
+                  Linking.openURL(
+                    String(item.links.find((link) => link.url)?.url),
+                  )}
+                  >
+                <Text>Link</Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity>
               <Button
                 title={'Translate'}
