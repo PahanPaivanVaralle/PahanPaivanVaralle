@@ -5,11 +5,27 @@ import Camera from '../pages/Camera';
 import MapPage from '../pages/map';
 import HappyNews from '../pages/HappyNews';
 import WritePage from '../pages/WritePage';
-import { TouchableOpacity, View } from 'react-native';
+import Settings from '../pages/Settings';
+import { TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../lib/ThemeContext';
+
+function SettingsButton() {
+  const navigation = useNavigation<any>();
+  return (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Settings')}
+      style={{ marginRight: 15 }}
+    >
+      <Ionicons name="settings-sharp" size={25} color="black" />
+    </TouchableOpacity>
+  );
+}
 
 const BottomTab = createBottomTabNavigator();
 
 export default function NavBar() {
+  const { theme } = useTheme();
   return (
     <BottomTab.Navigator
       screenOptions={{
@@ -17,7 +33,7 @@ export default function NavBar() {
         tabBarInactiveTintColor: 'black',
         headerTintColor: 'black',
         tabBarStyle: {
-          backgroundColor: 'rgba(236, 192, 209, 0.8)',
+          backgroundColor: theme.tabBar,
           position: 'absolute',
           elevation: 0,
         },
@@ -26,14 +42,7 @@ export default function NavBar() {
           elevation: 0,
         },
         lazy: true,
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => console.log('Top button pressed')}
-            style={{ marginRight: 15 }}
-          >
-            <Ionicons name="settings-sharp" size={25} color="black" />
-          </TouchableOpacity>
-        ),
+        headerRight: () => <SettingsButton />,
       }}
     >
       <BottomTab.Screen
@@ -79,6 +88,26 @@ export default function NavBar() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="reader" size={size} color={color} />
           ),
+        }}
+      />
+      <BottomTab.Screen
+        name="Settings"
+        component={Settings}
+        options={{
+          title: 'Settings',
+          tabBarItemStyle: { display: 'none' },
+          headerRight: () => null,
+          headerLeft: () => {
+            const navigation = useNavigation<any>();
+            return (
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={{ marginLeft: 12 }}
+              >
+                <Ionicons name="chevron-back" size={26} color="black" />
+              </TouchableOpacity>
+            );
+          },
         }}
       />
     </BottomTab.Navigator>

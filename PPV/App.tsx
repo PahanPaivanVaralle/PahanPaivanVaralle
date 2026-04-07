@@ -2,8 +2,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import BottomBar from './components/navbar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Appearance } from 'react-native';
-import { useEffect } from 'react';
+import { Appearance, View, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ThemeProvider, useTheme } from './lib/ThemeContext';
+import { Login, pb, getUserID } from './lib/Pocketbase';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,19 +30,68 @@ function RootStack() {
   );
 }
 
-export default function App() {
-  useEffect(() => {
-    Appearance.setColorScheme('dark');
-  }, []);
-
+function ThemedApp() {
+  const { theme } = useTheme();
   return (
     <NavigationContainer theme={MyTheme}>
-      <LinearGradient
-        colors={['rgba(181, 218, 206, 1)', 'rgba(236, 192, 209, 1)']}
-        style={{ flex: 1 }}
-      >
+      <LinearGradient colors={theme.gradient} style={{ flex: 1 }}>
         <RootStack />
       </LinearGradient>
     </NavigationContainer>
+  );
+}
+
+function BlockedScreen() {
+  const { theme } = useTheme();
+  return (
+      <LinearGradient colors={theme.gradient} style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: 'black', fontSize: 20, fontWeight: "bold" }}>
+            YOU HAVE BEEN BANNED
+          </Text>
+        </View>
+      </LinearGradient>
+  );
+}
+
+export default function App() {
+  const [banned, setBanned] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    Appearance.setColorScheme('dark');
+
+    const init = async () => {
+      await Login();
+      const id = await getUserID();
+      if (!id) {
+        setBanned(false);
+        return;
+      }
+
+      try {
+        const user = await pb
+          .collection('users')
+          .getFirstListItem(`userid = "${id}"`);
+        setBanned(user.blocked === true);
+      } catch {
+        setBanned(false);
+      }
+    };
+
+    init();
+  }, []);
+
+  if (banned) return <BlockedScreen />;
+
+  return (
+    <ThemeProvider>
+      <ThemedApp />
+    </ThemeProvider>
   );
 }

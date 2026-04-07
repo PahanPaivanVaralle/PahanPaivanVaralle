@@ -1,17 +1,32 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, ImageBackground, ScrollView } from 'react-native';
+import {
+  Text,
+  View,
+  Image,
+  ImageBackground,
+  ScrollView,
+  TextInput,
+  Button,
+  Pressable,
+} from 'react-native';
 import { styles } from '../global';
 import PocketBase, { RecordModel } from 'pocketbase';
-
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-
-const pb = new PocketBase('https://pocketbase.misteri.fi');
+import {
+  pb,
+  loadLikedFeedImageIds,
+  toggleFeedImageLike,
+} from '../lib/Pocketbase';
+import { Ionicons } from '@expo/vector-icons';
+import CommentModal from './comment';
 
 export default function Home() {
   const [message, setMessage] = useState('');
   const [images, setImages] = useState<RecordModel[]>([]);
-  
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
 
   const fetchMessage = async () => {
     try {
@@ -24,7 +39,6 @@ export default function Home() {
       const result = await pb.collection('messages').getList(page, 1);
 
       const randomMessage = result.items[0];
-
       setMessage(randomMessage.msg);
     } catch (err) {
       console.log('Error fetching positive message:', err);
@@ -33,8 +47,22 @@ export default function Home() {
 
   const fetchImage = async () => {
     try {
-      const first = await pb.collection('feed_images').getFullList({ sort: '-created' });
+      const first = await pb
+        .collection('feed_images')
+        .getFullList({ sort: '-created' });
       setImages(first);
+      const liked = await loadLikedFeedImageIds();
+      setLikedIds(liked);
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        first.map(async (img) => {
+          const res = await pb
+            .collection('likes')
+            .getList(1, 1, { filter: `feed_image="${img.id}"` });
+          counts[img.id] = res.totalItems;
+        }),
+      );
+      setLikeCounts(counts);
     } catch (err) {
       console.log('Error fetching image:', err);
     }
@@ -49,23 +77,81 @@ export default function Home() {
 
   return (
     <ScrollView>
-      <Text style={{ fontSize: 16, color: '#555', paddingHorizontal: 20, marginTop: 20 }}>
-        Heres a positive message for you made by one of our users to brighten up your day!
+      <Text
+        style={{
+          fontSize: 16,
+          color: '#555',
+          paddingHorizontal: 20,
+          marginTop: 20,
+        }}
+      >
+        Heres a positive message for you made by one of our users to brighten up
+        your day!
       </Text>
       <View style={styles.TextContainer}>
         <Text style={styles.textStyle}>{message}</Text>
       </View>
-      <Text style={{ fontSize: 16, color: '#555', marginBottom: 10, paddingHorizontal: 20 }}>
-        Here you can see the latest images uploaded by our users. Feel free to use the camera to share your own positive moments!
+      <Text
+        style={{
+          fontSize: 16,
+          color: '#555',
+          marginBottom: 10,
+          paddingHorizontal: 20,
+        }}
+      >
+        Here you can see the latest images uploaded by our users. Feel free to
+        use the camera to share your own positive moments!
       </Text>
       {images.map((image) => (
         <View style={styles.imageContainer} key={image.id}>
           <Image
-            key={image.id}
             source={{ uri: pb.files.getURL(image, image.image) }}
-            style={styles.imageStyle} />
+            style={styles.imageStyle}
+          />
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Pressable
+              onPress={() => {
+                const isLiked = likedIds.has(image.id);
+                const newLiked = new Set(likedIds);
+                if (isLiked) newLiked.delete(image.id);
+                else newLiked.add(image.id);
+                setLikedIds(newLiked);
+                toggleFeedImageLike(image.id, !isLiked)
+                  .then((n) =>
+                    setLikeCounts((prev) => ({ ...prev, [image.id]: n })),
+                  )
+                  .catch(() => setLikedIds(likedIds));
+              }}
+            >
+              <Ionicons
+                name={likedIds.has(image.id) ? 'heart' : 'heart-outline'}
+                size={40}
+                color={likedIds.has(image.id) ? '#e53935' : 'black'}
+              />
+            </Pressable>
+            {(likeCounts[image.id] ?? 0) > 0 && (
+              <Text style={{ fontSize: 16, color: '#555' }}>
+                {likeCounts[image.id]}
+              </Text>
+            )}
+            <Pressable onPress={() => setSelectedImageId(image.id)}>
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={40}
+                color="black"
+              />
+            </Pressable>
+          </View>
+
+          <CommentModal
+            visible={selectedImageId === image.id}
+            onClose={() => setSelectedImageId(null)}
+            imageId={image.id}
+          />
         </View>
       ))}
+
       <StatusBar style="auto" />
     </ScrollView>
   );
