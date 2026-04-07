@@ -27,6 +27,9 @@ export default function Home() {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>(
+    {},
+  );
 
   const fetchMessage = async () => {
     try {
@@ -54,15 +57,23 @@ export default function Home() {
       const liked = await loadLikedFeedImageIds();
       setLikedIds(liked);
       const counts: Record<string, number> = {};
+      const cCounts: Record<string, number> = {};
       await Promise.all(
         first.map(async (img) => {
-          const res = await pb
-            .collection('likes')
-            .getList(1, 1, { filter: `feed_image="${img.id}"` });
-          counts[img.id] = res.totalItems;
+          const [likesRes, commentsRes] = await Promise.all([
+            pb
+              .collection('likes')
+              .getList(1, 1, { filter: `feed_image="${img.id}"` }),
+            pb
+              .collection('comments')
+              .getList(1, 1, { filter: `image="${img.id}"` }),
+          ]);
+          counts[img.id] = likesRes.totalItems;
+          cCounts[img.id] = commentsRes.totalItems;
         }),
       );
       setLikeCounts(counts);
+      setCommentCounts(cCounts);
     } catch (err) {
       console.log('Error fetching image:', err);
     }
@@ -130,11 +141,9 @@ export default function Home() {
                 color={likedIds.has(image.id) ? '#e53935' : 'black'}
               />
             </Pressable>
-            {(likeCounts[image.id] ?? 0) > 0 && (
-              <Text style={{ fontSize: 16, color: '#555' }}>
-                {likeCounts[image.id]}
-              </Text>
-            )}
+            <Text style={{ fontSize: 16, color: '#555' }}>
+              {likeCounts[image.id] ?? 0}
+            </Text>
             <Pressable onPress={() => setSelectedImageId(image.id)}>
               <Ionicons
                 name="chatbubble-ellipses-outline"
@@ -142,6 +151,9 @@ export default function Home() {
                 color="black"
               />
             </Pressable>
+            <Text style={{ fontSize: 16, color: '#555' }}>
+              {commentCounts[image.id] ?? 0}
+            </Text>
           </View>
 
           <CommentModal
