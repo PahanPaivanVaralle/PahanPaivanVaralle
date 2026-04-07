@@ -275,7 +275,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     flexShrink: 1,
     marginRight: 5,
-
+  },
   // Settings
   settingsContainer: {
     padding: 24,
@@ -420,4 +420,4 @@ export const styles = StyleSheet.create({
   settingsSaveBtnTextSaved: {
     color: '#1a7a3f',
   },
-});
+  })
