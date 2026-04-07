@@ -260,6 +260,21 @@ export const styles = StyleSheet.create({
   previewBtnSuccess: {
     backgroundColor: '#2e7d32',
   },
+  newsContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  },
+  newsButton: {
+  backgroundColor: '#e885c2',
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+  borderRadius: 8,
+  },
+  newsText: {
+    flex: 1,
+    flexShrink: 1,
+    marginRight: 5,
 
   // Settings
   settingsContainer: {
