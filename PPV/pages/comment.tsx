@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Modal,
   StyleSheet,
   Text,
@@ -8,10 +9,9 @@ import {
   TextInput,
   FlatList,
 } from 'react-native';
-import PocketBase from 'pocketbase';
+import { pb, getUserID } from '../lib/Pocketbase';
+import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
-
-const pb = new PocketBase('https://pocketbase.misteri.fi');
 
 type Props = {
   visible: boolean;
@@ -22,6 +22,7 @@ type Props = {
 export default function CommentModal({ visible, onClose, imageId }: Props) {
   const [text, setText] = useState('');
   const [comments, setComments] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const fetchComments = async () => {
     try {
@@ -35,13 +36,51 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
     }
   };
 
+  const resolveUserPbId = async (): Promise<string | null> => {
+    const uid = await getUserID();
+    if (!uid) return null;
+    try {
+      const res = await pb
+        .collection('users')
+        .getList(1, 1, { filter: `userid="${uid}"` });
+      return res.items[0]?.id ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleDeleteComment = (item: any) => {
+    if (item.user !== currentUserId) return;
+    Alert.alert(
+      'Poista kommentti',
+      'Haluatko varmasti poistaa tämän kommentin?',
+      [
+        { text: 'Peruuta', style: 'cancel' },
+        {
+          text: 'Poista',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await pb.collection('comments').delete(item.id);
+              fetchComments();
+            } catch (err) {
+              console.error('Error deleting comment:', err);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleCommentSubmit = async () => {
     if (!text.trim()) return;
 
     try {
+      const userPbId = await resolveUserPbId();
       await pb.collection('comments').create({
         comment: text,
         image: imageId,
+        user: userPbId,
       });
 
       setText('');
@@ -53,6 +92,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   useEffect(() => {
     if (visible) {
       fetchComments();
+      resolveUserPbId().then((id) => setCurrentUserId(id));
     }
   }, [visible, imageId]);
 
@@ -60,7 +100,19 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
     <Modal transparent visible={visible} animationType="slide">
       <View style={modalStyles.commentView}>
         <View style={modalStyles.modalView}>
-          <Text style={modalStyles.title}>Comments</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 10,
+            }}
+          >
+            <Text style={modalStyles.title}>Comments</Text>
+            <Pressable onPress={onClose}>
+              <Ionicons name="close-circle" size={30} color="#45ce9e" />
+            </Pressable>
+          </View>
           <TextInput
             maxLength={256}
             multiline
@@ -90,9 +142,12 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             data={comments}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View style={{ marginBottom: 10 }}>
+              <Pressable
+                onLongPress={() => handleDeleteComment(item)}
+                delayLongPress={500}
+              >
                 <Text style={modalStyles.commentText}>{item.comment}</Text>
-              </View>
+              </Pressable>
             )}
           />
         </View>

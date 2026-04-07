@@ -19,6 +19,8 @@ export async function getUserID() {
   return cachedUserID;
 }
 
+let cachedUserRecord: Record<string, any> | null = null;
+
 export async function Login() {
   if (Platform.OS === 'ios') return;
 
@@ -43,17 +45,19 @@ export async function Login() {
       .collection('users')
       .getFirstListItem(`userid = "${cachedUserID}"`);
     console.log('User found');
-    return await pb.collection('users').update(user.id, data);
+    const updated = await pb.collection('users').update(user.id, data);
+    cachedUserRecord = updated;
+    return updated;
   } catch (err) {
     if ((err as any)?.status === 400) {
       console.log('Creating new user..');
-      return await pb.collection('users').create(data);
+      const created = await pb.collection('users').create(data);
+      cachedUserRecord = created;
+      return created;
     }
     throw err;
   }
 }
-
-let cachedUserRecord: Record<string, any> | null = null;
 
 export async function getUserRecord(): Promise<Record<string, any> | null> {
   if (Platform.OS === 'ios') return null;
