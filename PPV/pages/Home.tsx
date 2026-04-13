@@ -10,7 +10,7 @@ import {
   toggleFeedImageLike,
 } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
-import CommentModal from './comment';
+import CommentModal from './Comment';
 
 export default function Home() {
   const [message, setMessage] = useState('');

@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts } from 'expo-font';
-import BottomBar from './components/navbar';
+import BottomBar from './components/Navbar';
 import { Appearance, View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
