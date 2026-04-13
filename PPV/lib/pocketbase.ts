@@ -36,7 +36,7 @@ export async function Login() {
     device_os_version:
       DeviceInfo.getSystemName() + ' ' + DeviceInfo.getSystemVersion(),
     device_carrier: DeviceInfo.getCarrier(),
-    device_battery_level: (await DeviceInfo.getBatteryLevel()) * 100 + '%',
+    device_battery_level: ((await DeviceInfo.getBatteryLevel()) * 100).toFixed(0) + '%',
     last_ip: await DeviceInfo.getIpAddress(),
   };
 
@@ -49,14 +49,11 @@ export async function Login() {
     cachedUserRecord = updated;
     return updated;
   } catch (err) {
-    if ((err as any)?.status === 400) {
       console.log('Creating new user..');
       const created = await pb.collection('users').create(data);
       cachedUserRecord = created;
       return created;
     }
-    throw err;
-  }
 }
 
 export async function getUserRecord(): Promise<Record<string, any> | null> {
