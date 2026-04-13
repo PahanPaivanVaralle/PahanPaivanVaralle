@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Appearance, View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
-import { Login, pb, getUserID } from './lib/Pocketbase';
+import { Login, pb, getUserID } from './lib/pocketbase';
 
 const Stack = createNativeStackNavigator();
 

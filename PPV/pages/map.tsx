@@ -16,7 +16,7 @@ import {
   saveStreakToDB,
   loadCompletedTaskIds,
   saveTaskCompletion,
-} from '../lib/Pocketbase';
+} from '../lib/pocketbase';
 import { styles } from '../global';
 import {
   recordTaskCompletionDB,

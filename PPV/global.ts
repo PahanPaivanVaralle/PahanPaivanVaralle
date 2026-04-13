@@ -29,8 +29,8 @@ export const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.4,
     shadowRadius: 4,
+    shadowOffset: { width: -1, height: 2 },
     bottom: 20,
-    alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -261,20 +261,25 @@ export const styles = StyleSheet.create({
     backgroundColor: '#2e7d32',
   },
   newsContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  newsButton: {
-  backgroundColor: '#e885c2',
-  paddingVertical: 8,
-  paddingHorizontal: 12,
-  borderRadius: 8,
+  button: {
+    backgroundColor: '#e885c2',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 10,
   },
   newsText: {
     flex: 1,
     flexShrink: 1,
     marginRight: 5,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 10,
   },
   // Settings
   settingsContainer: {

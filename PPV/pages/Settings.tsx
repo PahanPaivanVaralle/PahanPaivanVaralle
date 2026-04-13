@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEMES, ThemeName, useTheme } from '../lib/ThemeContext';
 import { styles } from '../global';
-import { pb, getUserID } from '../lib/Pocketbase';
+import { pb, getUserID } from '../lib/pocketbase';
 
 type GpsAccuracy = 'best' | 'high' | 'balanced';
 
