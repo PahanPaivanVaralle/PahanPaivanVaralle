@@ -104,8 +104,10 @@ export default function HappyNews() {
           : item.title;
 
         return (
-          
-          <View key={item.id} style={styles.TextContainer}>
+          <View key={item.id} style={styles.textContainer}>
+            <View style={styles.newsContainer}>
+              <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
+          <View key={item.id} style={styles.textContainer}>
             <Text style={styles.newsText}>{titleToShow}</Text>
             <View style={styles.buttonRow}>
               <TouchableOpacity
@@ -116,14 +118,14 @@ export default function HappyNews() {
                   )
                 }
               >
-                <Text>Read article</Text>
+                <Text style={styles.text}>Read article</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.button}
                 onPress={() => translateItem(item)}
               >
-                <Text>Translate</Text>
+                <Text style={styles.text}>Translate</Text>
               </TouchableOpacity>
             </View>
           </View>

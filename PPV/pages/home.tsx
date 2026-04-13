@@ -88,28 +88,14 @@ export default function Home() {
 
   return (
     <ScrollView>
-      <Text
-        style={{
-          fontSize: 16,
-          color: '#555',
-          paddingHorizontal: 20,
-          marginTop: 20,
-        }}
-      >
+      <Text style={[styles.text, styles.header]}>
         Heres a positive message for you made by one of our users to brighten up
         your day!
       </Text>
-      <View style={styles.TextContainer}>
-        <Text style={styles.textStyle}>{message}</Text>
+      <View style={styles.textContainer}>
+        <Text style={styles.letterText}>{message}</Text>
       </View>
-      <Text
-        style={{
-          fontSize: 16,
-          color: '#555',
-          marginBottom: 10,
-          paddingHorizontal: 20,
-        }}
-      >
+      <Text style={[styles.text, styles.header]}>
         Here you can see the latest images uploaded by our users. Feel free to
         use the camera to share your own positive moments!
       </Text>
@@ -141,7 +127,7 @@ export default function Home() {
                 color={likedIds.has(image.id) ? '#e53935' : 'black'}
               />
             </Pressable>
-            <Text style={{ fontSize: 16, color: '#555' }}>
+            <Text style={[styles.text, styles.postInteractionText]}>
               {likeCounts[image.id] ?? 0}
             </Text>
             <Pressable onPress={() => setSelectedImageId(image.id)}>
@@ -151,7 +137,7 @@ export default function Home() {
                 color="black"
               />
             </Pressable>
-            <Text style={{ fontSize: 16, color: '#555' }}>
+            <Text style={[styles.text, styles.postInteractionText]}>
               {commentCounts[image.id] ?? 0}
             </Text>
           </View>

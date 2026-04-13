@@ -33,8 +33,9 @@ export default function WritePage() {
   return (
     <KeyboardAwareScrollView>
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-        <View style={styles.TextContainer}>
+        <View style={styles.textContainer}>
           <TextInput
+            style={styles.text}
             maxLength={256}
             multiline={true}
             numberOfLines={10}

@@ -9,7 +9,7 @@ import {
   TextInput,
   FlatList,
 } from 'react-native';
-import { pb, getUserID } from '../lib/Pocketbase';
+import { pb, getUserID } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
 import { useTheme } from '../lib/ThemeContext';
@@ -116,7 +116,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               marginBottom: 10,
             }}
           >
-            <Text style={[modalStyles.title, { color: textColor }]}>
+            <Text style={[styles.text, modalStyles.title]}>Comments</Text>
+            <Text style={[styles.text, modalStyles.title, { color: textColor }]}>
               Comments
             </Text>
             <Pressable onPress={onClose}>
@@ -127,6 +128,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             maxLength={256}
             multiline
             style={[
+              styles.text,
               styles.commentInput,
               {
                 backgroundColor: inputBg,
@@ -151,7 +153,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               ]}
               onPress={onClose}
             >
-              <Text style={modalStyles.buttonText}>Close</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Send</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Close</Text>
             </Pressable>
 
             <Pressable
@@ -161,7 +164,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               ]}
               onPress={handleCommentSubmit}
             >
-              <Text style={modalStyles.buttonText}>Send</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Close</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Send</Text>
             </Pressable>
           </View>
 
@@ -173,7 +177,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                 onLongPress={() => handleDeleteComment(item)}
                 delayLongPress={500}
               >
-                <Text style={[modalStyles.commentText, { color: textColor }]}>
+                <Text style={[styles.text, modalStyles.commentText]}>
+                <Text style={[styles.text, modalStyles.commentText, { color: textColor }]}>
                   {item.comment}
                 </Text>
               </Pressable>

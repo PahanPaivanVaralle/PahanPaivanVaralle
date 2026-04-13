@@ -1,7 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
-import BottomBar from './components/navbar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFonts } from 'expo-font';
+import BottomBar from './components/navbar';
 import { Appearance, View, Text } from 'react-native';
 import { useEffect, useState } from 'react';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
@@ -18,6 +19,11 @@ const MyTheme = {
 };
 
 function RootStack() {
+  const [loaded, error] = useFonts({
+    'Capriola-Regular': require('./assets/fonts/Capriola-Regular.ttf'),
+    'Jua-Regular': require('./assets/fonts/Jua-Regular.ttf'),
+  });
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -44,19 +50,19 @@ function ThemedApp() {
 function BlockedScreen() {
   const { theme } = useTheme();
   return (
-      <LinearGradient colors={theme.gradient} style={{ flex: 1 }}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Text style={{ color: 'black', fontSize: 20, fontWeight: "bold" }}>
-            YOU HAVE BEEN BANNED
-          </Text>
-        </View>
-      </LinearGradient>
+    <LinearGradient colors={theme.gradient} style={{ flex: 1 }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold' }}>
+          YOU HAVE BEEN BANNED
+        </Text>
+      </View>
+    </LinearGradient>
   );
 }
 

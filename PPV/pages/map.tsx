@@ -287,13 +287,13 @@ export default function MapPage() {
           run('centerOnUser()');
         }}
       >
-        <Text style={styles.locateIcon}>📍</Text>
+        <Text style={[styles.text, styles.locateIcon]}>📍</Text>
       </TouchableOpacity>
       {streak.count > 0 && (
         <View
           style={[styles.streakBadge, !streakAlive && styles.streakBadgeDead]}
         >
-          <Text style={styles.streakText}>
+          <Text style={[styles.text, styles.streakText]}>
             {streakAlive ? '🔥' : '💀'} {streak.count}
           </Text>
         </View>
