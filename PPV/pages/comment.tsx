@@ -26,11 +26,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const { theme } = useTheme();
-  const isDark = theme.name === 'Tumma';
-  const textColor = isDark ? '#fff' : '#333';
   const accentColor = theme.tabBar;
   const bgColor = theme.gradient[0];
-  const inputBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)';
 
   const fetchComments = async () => {
     try {
@@ -133,18 +130,14 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               styles.text,
               styles.commentInput,
               {
-                backgroundColor: inputBg,
                 borderColor: '#000',
                 borderWidth: 2,
-                color: textColor,
               },
             ]}
             value={text}
             onChangeText={setText}
             placeholder="Write your comment..."
-            placeholderTextColor={
-              isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'
-            }
+            placeholderTextColor="#000"
           />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
