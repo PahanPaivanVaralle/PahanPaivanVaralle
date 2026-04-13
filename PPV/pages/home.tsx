@@ -157,8 +157,8 @@ export default function Home() {
             brighten up your day!
           </Text>
 
-          <View style={styles.TextContainer}>
-            <Text style={styles.textStyle}>{message}</Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.letterText}>{message}</Text>
           </View>
 
           <Text
