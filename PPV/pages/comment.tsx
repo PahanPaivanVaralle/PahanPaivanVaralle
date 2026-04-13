@@ -9,7 +9,7 @@ import {
   TextInput,
   FlatList,
 } from 'react-native';
-import { pb, getUserID } from '../lib/Pocketbase';
+import { pb, getUserID } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
 
@@ -108,7 +108,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               marginBottom: 10,
             }}
           >
-            <Text style={modalStyles.title}>Comments</Text>
+            <Text style={[styles.text, modalStyles.title]}>Comments</Text>
             <Pressable onPress={onClose}>
               <Ionicons name="close-circle" size={30} color="#45ce9e" />
             </Pressable>
@@ -127,14 +127,14 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               style={[modalStyles.button, { flex: 1 }]}
               onPress={handleCommentSubmit}
             >
-              <Text style={modalStyles.buttonText}>Send</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Send</Text>
             </Pressable>
 
             <Pressable
               style={[modalStyles.button, { flex: 1 }]}
               onPress={onClose}
             >
-              <Text style={modalStyles.buttonText}>Close</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Close</Text>
             </Pressable>
           </View>
 
@@ -146,7 +146,9 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                 onLongPress={() => handleDeleteComment(item)}
                 delayLongPress={500}
               >
-                <Text style={modalStyles.commentText}>{item.comment}</Text>
+                <Text style={[styles.text, modalStyles.commentText]}>
+                  {item.comment}
+                </Text>
               </Pressable>
             )}
           />

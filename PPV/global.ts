@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
 
-  TextContainer: {
+  textContainer: {
     marginTop: 50,
     alignSelf: 'center',
     width: '90%',
@@ -37,17 +37,32 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  textStyle: {
+  header: {
+    color: '#333',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  text: {
+    fontFamily: 'Capriola-Regular',
+  },
+  letterText: {
     fontSize: 30,
     color: '#333',
     textAlign: 'center',
+    fontFamily: 'Jua-Regular',
     flexWrap: 'wrap',
   },
+  postInteractionText: {
+    color: '#333',
+    fontSize: 16,
+  },
   imageStyle: {
-  width: '100%',   
-  height: 250,     
-  borderRadius: 10,
-  marginBottom: 15,
+    width: '100%',
+    height: 250,
+    borderRadius: 10,
+    marginBottom: 15,
   },
   imageContainer: {
     margin: 20,
@@ -65,14 +80,14 @@ export const styles = StyleSheet.create({
     width: '90%',
   },
   commentInput: {
-  width: '100%', 
-  minHeight: 45, 
-  marginBottom: 10, 
-  padding: 10,
-  borderRadius: 8,
-  backgroundColor: 'rgba(255,255,255,0.8)',
-  borderWidth: 1,
-  borderColor: 'rgba(0,0,0,0.1)',
+    width: '100%',
+    minHeight: 45,
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   CameraContainer: {
     flex: 1,
@@ -261,15 +276,15 @@ export const styles = StyleSheet.create({
     backgroundColor: '#2e7d32',
   },
   newsContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   newsButton: {
-  backgroundColor: '#e885c2',
-  paddingVertical: 8,
-  paddingHorizontal: 12,
-  borderRadius: 8,
+    backgroundColor: '#e885c2',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
   },
   newsText: {
     flex: 1,
@@ -420,4 +435,4 @@ export const styles = StyleSheet.create({
   settingsSaveBtnTextSaved: {
     color: '#1a7a3f',
   },
-  })
+});

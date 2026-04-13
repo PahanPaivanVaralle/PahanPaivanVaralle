@@ -1,14 +1,14 @@
-import Home from '../pages/home';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Camera from '../pages/Camera';
+import { TouchableOpacity } from 'react-native';
+import { useTheme } from '../lib/ThemeContext';
+import Home from '../pages/home';
 import MapPage from '../pages/map';
+import Camera from '../pages/Camera';
 import HappyNews from '../pages/HappyNews';
 import WritePage from '../pages/WritePage';
 import Settings from '../pages/Settings';
-import { TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../lib/ThemeContext';
 
 function SettingsButton() {
   const navigation = useNavigation<any>();
@@ -31,12 +31,14 @@ export default function NavBar() {
       screenOptions={{
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'black',
+        headerTitleStyle: { fontFamily: 'Capriola-Regular' },
         headerTintColor: 'black',
         tabBarStyle: {
           backgroundColor: theme.tabBar,
           position: 'absolute',
           elevation: 0,
         },
+        tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           elevation: 0,

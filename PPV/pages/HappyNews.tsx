@@ -66,13 +66,13 @@ export default function HappyNews() {
         }, '') || data.translatedText;
 
       setTranslatedTitles((prev) => ({
-      ...prev,
-      [item.id]: {
-        original: item.title,
-        translated: bestTranslation || item.title,
-        isTranslated: true,
-      },
-    }));
+        ...prev,
+        [item.id]: {
+          original: item.title,
+          translated: bestTranslation || item.title,
+          isTranslated: true,
+        },
+      }));
       setTranslating(false);
     } catch (err) {
       console.log('Translate error:', err);
@@ -95,16 +95,17 @@ export default function HappyNews() {
           : item.title;
 
         return (
-          <View key={item.id} style={styles.TextContainer}>
+          <View key={item.id} style={styles.textContainer}>
             <View style={styles.newsContainer}>
-              <Text style={styles.newsText}>{titleToShow}</Text>
+              <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
               <TouchableOpacity
                 style={styles.newsButton}
                 onPress={() =>
                   Linking.openURL(
                     String(item.links.find((link) => link.url)?.url),
-                  )}
-                  >
+                  )
+                }
+              >
                 <Text>Link</Text>
               </TouchableOpacity>
             </View>

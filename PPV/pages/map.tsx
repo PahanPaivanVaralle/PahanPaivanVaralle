@@ -16,7 +16,7 @@ import {
   saveStreakToDB,
   loadCompletedTaskIds,
   saveTaskCompletion,
-} from '../lib/Pocketbase';
+} from '../lib/pocketbase';
 import { styles } from '../global';
 import {
   recordTaskCompletionDB,
@@ -267,7 +267,7 @@ export default function MapPage() {
           run('centerOnUser()');
         }}
       >
-        <Text style={styles.locateIcon}>📍</Text>
+        <Text style={[styles.text, styles.locateIcon]}>📍</Text>
       </TouchableOpacity>
       {streak.count > 0 && (
         <TouchableOpacity
@@ -277,7 +277,7 @@ export default function MapPage() {
             setStreak({ count: 0, lastCompleted: 0 });
           }}
         >
-          <Text style={styles.streakText}>
+          <Text style={[styles.text, styles.streakText]}>
             {streakAlive ? '🔥' : '💀'} {streak.count}
           </Text>
         </TouchableOpacity>

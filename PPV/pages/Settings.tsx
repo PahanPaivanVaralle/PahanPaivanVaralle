@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEMES, ThemeName, useTheme } from '../lib/ThemeContext';
 import { styles } from '../global';
-import { pb, getUserID } from '../lib/Pocketbase';
+import { pb, getUserID } from '../lib/pocketbase';
 
 type GpsAccuracy = 'best' | 'high' | 'balanced';
 
@@ -190,7 +190,7 @@ export default function Settings() {
           <View style={{ gap: 16 }}>
             {/* GPS accuracy */}
             <View>
-              <Text style={[styles.settingsRowLabel, { marginBottom: 8 }]}>
+              <Text style={[styles.settingsRowLabel, styles.text]}>
                 GPS accuracy
               </Text>
               <View style={styles.settingsOptionRow}>
@@ -220,7 +220,9 @@ export default function Settings() {
 
             {/* Tracking by default */}
             <View style={styles.settingsRow}>
-              <Text style={styles.settingsRowLabel}>Tracking by default</Text>
+              <Text style={[styles.settingsRowLabel, styles.text]}>
+                Tracking by default
+              </Text>
               <Switch
                 value={defaultTracking}
                 onValueChange={setDefaultTracking}
@@ -229,7 +231,9 @@ export default function Settings() {
 
             {/* Default zoom */}
             <View style={styles.settingsRow}>
-              <Text style={styles.settingsRowLabel}>Default zoom</Text>
+              <Text style={[styles.settingsRowLabel, styles.text]}>
+                Default zoom
+              </Text>
               <View style={styles.settingsStepper}>
                 <TouchableOpacity
                   style={styles.settingsStepperBtn}

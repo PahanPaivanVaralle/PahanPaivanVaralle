@@ -14,7 +14,7 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { pb } from '../lib/Pocketbase';
+import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { distanceMetres, TaskMarker } from '../utils/streak';
@@ -202,7 +202,9 @@ export default function Camera() {
       <CameraView ref={ref} style={styles.camera} facing={facing} />
       {pendingTask && (
         <View style={styles.taskBanner}>
-          <Text style={styles.taskBannerText}>🎯 {pendingTask.title}</Text>
+          <Text style={[styles.text, styles.taskBannerText]}>
+            🎯 {pendingTask.title}
+          </Text>
         </View>
       )}
       <View
@@ -265,7 +267,7 @@ export default function Camera() {
               disabled={uploading}
             >
               <Ionicons name="arrow-back" size={24} color="#fff" />
-              <Text style={styles.previewBtnText}>Peruuta</Text>
+              <Text style={[styles.text, styles.previewBtnText]}>Peruuta</Text>
             </TouchableOpacity>
             {pendingTask ? (
               <TouchableOpacity
@@ -283,7 +285,9 @@ export default function Camera() {
                 ) : (
                   <Ionicons name="checkmark-circle" size={24} color="#fff" />
                 )}
-                <Text style={styles.previewBtnText}>Suorita</Text>
+                <Text style={[styles.text, styles.previewBtnText]}>
+                  Suorita
+                </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -299,7 +303,7 @@ export default function Camera() {
                 ) : (
                   <Ionicons name="map" size={24} color="#fff" />
                 )}
-                <Text style={styles.previewBtnText}>Kartta</Text>
+                <Text style={[styles.text, styles.previewBtnText]}>Kartta</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -311,7 +315,9 @@ export default function Camera() {
               disabled={uploading}
             >
               <Ionicons name="newspaper" size={24} color="#aaa" />
-              <Text style={[styles.previewBtnText, { color: '#aaa' }]}>
+              <Text
+                style={[styles.text, styles.previewBtnText, { color: '#aaa' }]}
+              >
                 Feed
               </Text>
             </TouchableOpacity>
