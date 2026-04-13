@@ -11,6 +11,7 @@ import { getNews } from '../utils/newsSorter';
 import React, { useEffect, useState } from 'react';
 import { FeedItem } from 'react-native-rss-parser';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useTheme } from '../lib/ThemeContext';
 
 export default function HappyNews() {
   const [news, setNews] = useState<FeedItem[]>([]);
@@ -23,6 +24,7 @@ export default function HappyNews() {
   }>({});
   const [translating, setTranslating] = useState(false);
   const headerHeight = useHeaderHeight();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const load = async () => {
@@ -109,7 +111,7 @@ export default function HappyNews() {
             <Text style={styles.newsText}>{titleToShow}</Text>
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: theme.button }]}
                 onPress={() =>
                   Linking.openURL(
                     String(item.links.find((link) => link.url)?.url),
@@ -120,7 +122,7 @@ export default function HappyNews() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: theme.button }]}
                 onPress={() => translateItem(item)}
               >
                 <Text>Translate</Text>

@@ -9,7 +9,7 @@ import {
   TextInput,
   FlatList,
 } from 'react-native';
-import { pb, getUserID } from '../lib/Pocketbase';
+import { pb, getUserID } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
 import { useTheme } from '../lib/ThemeContext';
@@ -26,11 +26,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const { theme } = useTheme();
-  const isDark = theme.name === 'Tumma';
-  const textColor = isDark ? '#fff' : '#333';
   const accentColor = theme.tabBar;
   const bgColor = theme.gradient[0];
-  const inputBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)';
 
   const fetchComments = async () => {
     try {
@@ -116,7 +113,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               marginBottom: 10,
             }}
           >
-            <Text style={[modalStyles.title, { color: textColor }]}>
+            <Text style={[modalStyles.title]}>
               Comments
             </Text>
             <Pressable onPress={onClose}>
@@ -129,18 +126,14 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             style={[
               styles.commentInput,
               {
-                backgroundColor: inputBg,
                 borderColor: '#000',
                 borderWidth: 2,
-                color: textColor,
               },
             ]}
             value={text}
             onChangeText={setText}
             placeholder="Write your comment..."
-            placeholderTextColor={
-              isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'
-            }
+            placeholderTextColor="#000"
           />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -173,7 +166,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                 onLongPress={() => handleDeleteComment(item)}
                 delayLongPress={500}
               >
-                <Text style={[modalStyles.commentText, { color: textColor }]}>
+                <Text style={[modalStyles.commentText]}>
                   {item.comment}
                 </Text>
               </Pressable>

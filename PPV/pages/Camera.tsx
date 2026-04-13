@@ -19,6 +19,7 @@ import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { distanceMetres, TaskMarker } from '../utils/streak';
 import { Platform } from 'react-native';
+import { useTheme } from '../lib/ThemeContext';
 
 interface ImageRecord {
   id: string;
@@ -34,8 +35,8 @@ export default function Camera() {
     title: string;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const { theme } = useTheme();
 
-  // Pick up task from navigation params (from Map's "Suorita" button)
   useEffect(() => {
     const { taskId, taskTitle } = route.params ?? {};
     if (taskId) {
@@ -81,7 +82,6 @@ export default function Camera() {
     });
     const { latitude: la, longitude: lo } = loc.coords;
 
-    // Find the target task and always enforce the 10m distance check
     const targetTask = forceTaskId
       ? (taskMarkers.find((t) => t.id === forceTaskId) ?? null)
       : null;
@@ -97,7 +97,6 @@ export default function Camera() {
       }
     }
 
-    // Auto-detect nearby task if no explicit task selected
     const nearbyTask =
       targetTask ??
       taskMarkers.find((t) => distanceMetres(la, lo, t.la, t.lo) <= 10) ??
@@ -226,7 +225,7 @@ export default function Camera() {
           />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.captureButton}
+          style={[styles.captureButton, { backgroundColor: theme.button }]}
           onPress={takePicture}
           disabled={uploading}
         >
