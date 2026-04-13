@@ -55,6 +55,7 @@ const S = JSON.stringify;
 
 export default function MapPage() {
   const { theme } = useTheme();
+  // @ts-ignore
   const isDark = theme.name === 'Tumma';
 
   type AlertButton = {

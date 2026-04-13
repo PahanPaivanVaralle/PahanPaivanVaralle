@@ -3,8 +3,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import { useTheme } from '../lib/ThemeContext';
-import Home from '../pages/home';
-import MapPage from '../pages/map';
+import Home from '../pages/Home';
+import MapPage from '../pages/Map';
 import Camera from '../pages/Camera';
 import HappyNews from '../pages/HappyNews';
 import WritePage from '../pages/WritePage';
@@ -25,7 +25,7 @@ function SettingsButton() {
 
 const BottomTab = createBottomTabNavigator();
 
-export default function NavBar() {
+export default function Navbar() {
   const { theme } = useTheme();
   return (
     <BottomTab.Navigator
