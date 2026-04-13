@@ -425,4 +425,44 @@ export const styles = StyleSheet.create({
   settingsSaveBtnTextSaved: {
     color: '#1a7a3f',
   },
+  // Alert modal (map)
+  alertOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  alertBox: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 2,
+    padding: 24,
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  alertMessage: {
+    fontSize: 15,
+    marginBottom: 20,
+  },
+  alertBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'flex-end',
+  },
+  alertBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  alertBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
   })
