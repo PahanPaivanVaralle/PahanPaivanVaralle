@@ -38,11 +38,8 @@ export default function NavBar() {
           backgroundColor: theme.tabBar,
           position: 'absolute',
           elevation: 0,
-          height: 65,
-          paddingBottom: 8,
-          paddingTop: 6,
         },
-        tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
+        tabBarLabelStyle: { fontFamily: 'Capriola-Regular'},
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           elevation: 0,

@@ -115,7 +115,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
           >
             <Text style={[styles.text, modalStyles.title]}>Comments</Text>
             <Text
-              style={[styles.text, modalStyles.title, { color: textColor }]}
+              style={[styles.text, modalStyles.title]}
             >
               Comments
             </Text>
@@ -176,7 +176,6 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                   style={[
                     styles.text,
                     modalStyles.commentText,
-                    { color: textColor },
                   ]}
                 >
                   {item.comment}
