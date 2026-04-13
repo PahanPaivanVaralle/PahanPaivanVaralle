@@ -12,6 +12,7 @@ import {
 import { pb, getUserID } from '../lib/Pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
+import { useTheme } from '../lib/ThemeContext';
 
 type Props = {
   visible: boolean;
@@ -23,6 +24,13 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   const [text, setText] = useState('');
   const [comments, setComments] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const { theme } = useTheme();
+  const isDark = theme.name === 'Tumma';
+  const textColor = isDark ? '#fff' : '#333';
+  const accentColor = theme.tabBar;
+  const bgColor = theme.gradient[0];
+  const inputBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)';
 
   const fetchComments = async () => {
     try {
@@ -99,7 +107,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   return (
     <Modal transparent visible={visible} animationType="slide">
       <View style={modalStyles.commentView}>
-        <View style={modalStyles.modalView}>
+        <View style={[modalStyles.modalView, { backgroundColor: bgColor }]}>
           <View
             style={{
               flexDirection: 'row',
@@ -108,33 +116,52 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               marginBottom: 10,
             }}
           >
-            <Text style={modalStyles.title}>Comments</Text>
+            <Text style={[modalStyles.title, { color: textColor }]}>
+              Comments
+            </Text>
             <Pressable onPress={onClose}>
-              <Ionicons name="close-circle" size={30} color="#45ce9e" />
+              <Ionicons name="close-circle" size={30} color={accentColor} />
             </Pressable>
           </View>
           <TextInput
             maxLength={256}
             multiline
-            style={styles.commentInput}
+            style={[
+              styles.commentInput,
+              {
+                backgroundColor: inputBg,
+                borderColor: '#000',
+                borderWidth: 2,
+                color: textColor,
+              },
+            ]}
             value={text}
             onChangeText={setText}
             placeholder="Write your comment..."
+            placeholderTextColor={
+              isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)'
+            }
           />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Pressable
-              style={[modalStyles.button, { flex: 1 }]}
-              onPress={handleCommentSubmit}
-            >
-              <Text style={modalStyles.buttonText}>Send</Text>
-            </Pressable>
-
-            <Pressable
-              style={[modalStyles.button, { flex: 1 }]}
+              style={[
+                modalStyles.button,
+                { flex: 1, backgroundColor: accentColor },
+              ]}
               onPress={onClose}
             >
               <Text style={modalStyles.buttonText}>Close</Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                modalStyles.button,
+                { flex: 1, backgroundColor: accentColor },
+              ]}
+              onPress={handleCommentSubmit}
+            >
+              <Text style={modalStyles.buttonText}>Send</Text>
             </Pressable>
           </View>
 
@@ -146,7 +173,9 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                 onLongPress={() => handleDeleteComment(item)}
                 delayLongPress={500}
               >
-                <Text style={modalStyles.commentText}>{item.comment}</Text>
+                <Text style={[modalStyles.commentText, { color: textColor }]}>
+                  {item.comment}
+                </Text>
               </Pressable>
             )}
           />
@@ -164,9 +193,10 @@ const modalStyles = StyleSheet.create({
   modalView: {
     width: '100%',
     height: '80%',
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,
+    borderWidth: 2,
+    borderColor: '#000',
   },
   title: {
     fontSize: 18,
@@ -176,20 +206,20 @@ const modalStyles = StyleSheet.create({
   },
   commentText: {
     fontSize: 26,
-    color: '#333',
     borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 2,
+    borderColor: '#000',
     padding: 10,
     marginBottom: 10,
     marginTop: 10,
-    borderColor: '#45ce9e',
   },
   button: {
     marginTop: 10,
-    backgroundColor: '#45ce9e',
     padding: 15,
     borderRadius: 10,
     width: '50%',
+    borderWidth: 2,
+    borderColor: '#000',
   },
   buttonText: {
     color: 'white',
