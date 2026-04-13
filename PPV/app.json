@@ -4,11 +4,11 @@
     "slug": "PPV",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/PPVlogo1.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/PPVlogo1.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/PPVlogo1.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -33,7 +33,7 @@
       "package": "com.anonymous.PPV"
     },
     "web": {
-      "favicon": "./assets/PPVlogo1.png"
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [

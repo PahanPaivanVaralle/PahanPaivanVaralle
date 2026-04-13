@@ -104,7 +104,7 @@ export default function HappyNews() {
           : item.title;
 
         return (
-
+          
           <View key={item.id} style={styles.TextContainer}>
             <Text style={styles.newsText}>{titleToShow}</Text>
             <View style={styles.buttonRow}>
