@@ -113,7 +113,10 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               marginBottom: 10,
             }}
           >
-            <Text style={[modalStyles.title]}>
+            <Text style={[styles.text, modalStyles.title]}>Comments</Text>
+            <Text
+              style={[styles.text, modalStyles.title, { color: textColor }]}
+            >
               Comments
             </Text>
             <Pressable onPress={onClose}>
@@ -124,6 +127,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             maxLength={256}
             multiline
             style={[
+              styles.text,
               styles.commentInput,
               {
                 borderColor: '#000',
@@ -144,7 +148,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               ]}
               onPress={onClose}
             >
-              <Text style={modalStyles.buttonText}>Close</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Send</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Close</Text>
             </Pressable>
 
             <Pressable
@@ -154,7 +159,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               ]}
               onPress={handleCommentSubmit}
             >
-              <Text style={modalStyles.buttonText}>Send</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Close</Text>
+              <Text style={[styles.text, modalStyles.buttonText]}>Send</Text>
             </Pressable>
           </View>
 
@@ -166,7 +172,13 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                 onLongPress={() => handleDeleteComment(item)}
                 delayLongPress={500}
               >
-                <Text style={[modalStyles.commentText]}>
+                <Text
+                  style={[
+                    styles.text,
+                    modalStyles.commentText,
+                    { color: textColor },
+                  ]}
+                >
                   {item.comment}
                 </Text>
               </Pressable>

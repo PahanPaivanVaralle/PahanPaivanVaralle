@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, Text, Alert } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  Modal,
+  StyleSheet,
+  Pressable,
+} from 'react-native';
+import { useTheme } from '../lib/ThemeContext';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import * as Location from 'expo-location';
 import {
@@ -13,7 +21,6 @@ import {
   loadLikedMarkerIds,
   toggleMarkerLike,
   loadStreakFromDB,
-  saveStreakToDB,
   loadCompletedTaskIds,
   saveTaskCompletion,
 } from '../lib/pocketbase';
@@ -47,6 +54,20 @@ const js = (code: string) => `${code}; true;`;
 const S = JSON.stringify;
 
 export default function MapPage() {
+  const { theme } = useTheme();
+  const isDark = theme.name === 'Tumma';
+
+  type AlertButton = {
+    text: string;
+    onPress?: () => void;
+    style?: 'default' | 'cancel' | 'destructive';
+  };
+  type AlertData = { title: string; message: string; buttons?: AlertButton[] };
+  const [alertData, setAlertData] = useState<AlertData | null>(null);
+
+  const showAlert = (title: string, message: string, buttons?: AlertButton[]) =>
+    setAlertData({ title, message, buttons });
+
   const webRef = useRef<WebView>(null);
   const locRef = useRef<Location.LocationObject | null>(null);
   const liked = useRef<Set<string>>(new Set());
@@ -196,9 +217,9 @@ export default function MapPage() {
           task.lo,
         );
         if (dist > 20) {
-          Alert.alert(
+          showAlert(
             'Liian kaukana!',
-            `Olet ${Math.round(dist)} metrin päässä tehtävästä. Siirry lähemmäs tehtävää.\n\n[debug] sinä: ${loc.coords.latitude.toFixed(5)}, ${loc.coords.longitude.toFixed(5)}\ntehtävä: ${task.la}, ${task.lo}`,
+            `Olet ${Math.round(dist)} metrin päässä tehtävästä. Siirry lähemmäs tehtävää.`,
           );
           return;
         }
@@ -213,7 +234,6 @@ export default function MapPage() {
   useFocusEffect(
     useCallback(() => {
       if (newMarkerParamRef.current) {
-        // newMarker param present — useEffect will inject it directly, skip full reload
         return;
       }
       if (!ready.current) {
@@ -267,20 +287,79 @@ export default function MapPage() {
           run('centerOnUser()');
         }}
       >
-        <Text style={styles.locateIcon}>📍</Text>
+        <Text style={[styles.text, styles.locateIcon]}>📍</Text>
       </TouchableOpacity>
       {streak.count > 0 && (
-        <TouchableOpacity
+        <View
           style={[styles.streakBadge, !streakAlive && styles.streakBadgeDead]}
-          onLongPress={async () => {
-            await saveStreakToDB(0, 0);
-            setStreak({ count: 0, lastCompleted: 0 });
-          }}
         >
-          <Text style={styles.streakText}>
+          <Text style={[styles.text, styles.streakText]}>
             {streakAlive ? '🔥' : '💀'} {streak.count}
           </Text>
-        </TouchableOpacity>
+        </View>
+      )}
+      {alertData && (
+        <Modal transparent animationType="fade" visible={!!alertData}>
+          <View style={styles.alertOverlay}>
+            <View
+              style={[
+                styles.alertBox,
+                { backgroundColor: theme.gradient[0], borderColor: '#000' },
+              ]}
+            >
+              <Text
+                style={[styles.alertTitle, { color: isDark ? '#fff' : '#111' }]}
+              >
+                {alertData.title}
+              </Text>
+              <Text
+                style={[
+                  styles.alertMessage,
+                  { color: isDark ? '#ddd' : '#333' },
+                ]}
+              >
+                {alertData.message}
+              </Text>
+              <View style={styles.alertBtnRow}>
+                {(alertData.buttons ?? [{ text: 'OK' }]).map((btn, i) => (
+                  <Pressable
+                    key={i}
+                    style={[
+                      styles.alertBtn,
+                      {
+                        backgroundColor:
+                          btn.style === 'destructive'
+                            ? '#c0392b'
+                            : btn.style === 'cancel'
+                              ? 'transparent'
+                              : theme.tabBar,
+                      },
+                      btn.style === 'cancel' && {
+                        borderWidth: 2,
+                        borderColor: '#000',
+                      },
+                    ]}
+                    onPress={() => {
+                      setAlertData(null);
+                      btn.onPress?.();
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.alertBtnText,
+                        btn.style === 'cancel' && {
+                          color: isDark ? '#fff' : '#111',
+                        },
+                      ]}
+                    >
+                      {btn.text}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );
