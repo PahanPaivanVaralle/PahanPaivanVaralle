@@ -17,7 +17,7 @@ import {
   pb,
   loadLikedFeedImageIds,
   toggleFeedImageLike,
-} from '../lib/Pocketbase';
+} from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import CommentModal from './comment';
 
