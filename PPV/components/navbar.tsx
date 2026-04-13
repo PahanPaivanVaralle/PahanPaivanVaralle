@@ -15,7 +15,8 @@ function SettingsButton() {
   return (
     <TouchableOpacity
       onPress={() => navigation.navigate('Settings')}
-      style={{ marginRight: 15 }}
+      style={{ marginRight: 8, padding: 10 }}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <Ionicons name="settings-sharp" size={25} color="black" />
     </TouchableOpacity>
@@ -37,6 +38,9 @@ export default function NavBar() {
           backgroundColor: theme.tabBar,
           position: 'absolute',
           elevation: 0,
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 6,
         },
         tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
         headerStyle: {
@@ -104,7 +108,8 @@ export default function NavBar() {
             return (
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
-                style={{ marginLeft: 12 }}
+                style={{ marginLeft: 6, padding: 10 }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons name="chevron-back" size={26} color="black" />
               </TouchableOpacity>

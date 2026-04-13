@@ -97,11 +97,7 @@ export default function Camera() {
       }
     }
 
-    // Auto-detect nearby task if no explicit task selected
-    const nearbyTask =
-      targetTask ??
-      taskMarkers.find((t) => distanceMetres(la, lo, t.la, t.lo) <= 10) ??
-      null;
+    const nearbyTask = targetTask;
 
     setUploading(true);
     try {

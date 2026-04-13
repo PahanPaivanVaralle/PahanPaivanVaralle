@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   Animated,
   Linking,
-  Button,
 } from 'react-native';
 import { styles } from '../global';
 import ScrollView = Animated.ScrollView;
@@ -86,6 +85,16 @@ export default function HappyNews() {
         paddingBottom: headerHeight,
       }}
     >
+      <Text
+        style={{
+          fontSize: 16,
+          color: '#555',
+          paddingHorizontal: 20,
+          marginTop: 20,
+        }}
+      >
+        Here is the happiest of news around the world!
+      </Text>
       {news.map((item) => {
         const translation = translatedTitles[item.id];
         const titleToShow = translation
@@ -98,23 +107,27 @@ export default function HappyNews() {
           <View key={item.id} style={styles.textContainer}>
             <View style={styles.newsContainer}>
               <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
+          <View key={item.id} style={styles.textContainer}>
+            <Text style={styles.newsText}>{titleToShow}</Text>
+            <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={styles.newsButton}
+                style={styles.button}
                 onPress={() =>
                   Linking.openURL(
                     String(item.links.find((link) => link.url)?.url),
                   )
                 }
               >
-                <Text>Link</Text>
+                <Text style={styles.text}>Read article</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => translateItem(item)}
+              >
+                <Text style={styles.text}>Translate</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity>
-              <Button
-                title={'Translate'}
-                onPress={() => translateItem(item)}
-              ></Button>
-            </TouchableOpacity>
           </View>
         );
       })}

@@ -29,8 +29,8 @@ export const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.4,
     shadowRadius: 4,
+    shadowOffset: { width: -1, height: 2 },
     bottom: 20,
-    alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -276,20 +276,25 @@ export const styles = StyleSheet.create({
     backgroundColor: '#2e7d32',
   },
   newsContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  newsButton: {
+  button: {
     backgroundColor: '#e885c2',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
+    marginTop: 10,
   },
   newsText: {
     flex: 1,
     flexShrink: 1,
     marginRight: 5,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+    gap: 10,
   },
   // Settings
   settingsContainer: {
@@ -435,4 +440,44 @@ export const styles = StyleSheet.create({
   settingsSaveBtnTextSaved: {
     color: '#1a7a3f',
   },
-});
+  // Alert modal (map)
+  alertOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  alertBox: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 2,
+    padding: 24,
+  },
+  alertTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  alertMessage: {
+    fontSize: 15,
+    marginBottom: 20,
+  },
+  alertBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    justifyContent: 'flex-end',
+  },
+  alertBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  alertBtnText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  })
