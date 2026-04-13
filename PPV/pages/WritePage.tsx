@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, Button, ImageBackground } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text } from 'react-native';
 import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useTheme } from '../lib/ThemeContext';
 
 export default function WritePage() {
   const [message, setMessage] = useState('');
+  const { theme } = useTheme();
 
   const handleSubmit = async () => {
     if (message.trim() === '') {
@@ -33,8 +35,9 @@ export default function WritePage() {
   return (
     <KeyboardAwareScrollView>
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-        <View style={styles.TextContainer}>
+        <View style={styles.textContainer}>
           <TextInput
+            style={styles.text}
             maxLength={256}
             multiline={true}
             numberOfLines={10}
@@ -43,7 +46,12 @@ export default function WritePage() {
             placeholder="Write your positive message here..."
           />
         </View>
-        <Button title="Send your letter" onPress={handleSubmit} />
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: theme.button }]}
+          onPress={handleSubmit}
+        >
+          <Text>Send your letter</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAwareScrollView>
   );

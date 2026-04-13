@@ -1,16 +1,11 @@
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Animated,
-  Linking,
-} from 'react-native';
+import { Text, View, TouchableOpacity, Animated, Linking } from 'react-native';
 import { styles } from '../global';
 import ScrollView = Animated.ScrollView;
 import { getNews } from '../utils/newsSorter';
 import React, { useEffect, useState } from 'react';
 import { FeedItem } from 'react-native-rss-parser';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useTheme } from '../lib/ThemeContext';
 
 export default function HappyNews() {
   const [news, setNews] = useState<FeedItem[]>([]);
@@ -23,6 +18,7 @@ export default function HappyNews() {
   }>({});
   const [translating, setTranslating] = useState(false);
   const headerHeight = useHeaderHeight();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const load = async () => {
@@ -104,26 +100,25 @@ export default function HappyNews() {
           : item.title;
 
         return (
-          
-          <View key={item.id} style={styles.TextContainer}>
-            <Text style={styles.newsText}>{titleToShow}</Text>
+          <View key={item.id} style={styles.textContainer}>
+            <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
             <View style={styles.buttonRow}>
               <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: theme.button }]}
                 onPress={() =>
                   Linking.openURL(
                     String(item.links.find((link) => link.url)?.url),
                   )
                 }
               >
-                <Text>Read article</Text>
+                <Text style={styles.text}>Read article</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.button}
+                style={[styles.button, { backgroundColor: theme.button }]}
                 onPress={() => translateItem(item)}
               >
-                <Text>Translate</Text>
+                <Text style={styles.text}>Translate</Text>
               </TouchableOpacity>
             </View>
           </View>
