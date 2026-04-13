@@ -1,10 +1,4 @@
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Animated,
-  Linking,
-} from 'react-native';
+import { Text, View, TouchableOpacity, Animated, Linking } from 'react-native';
 import { styles } from '../global';
 import ScrollView = Animated.ScrollView;
 import { getNews } from '../utils/newsSorter';
@@ -105,10 +99,7 @@ export default function HappyNews() {
 
         return (
           <View key={item.id} style={styles.textContainer}>
-            <View style={styles.newsContainer}>
-              <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
-          <View key={item.id} style={styles.textContainer}>
-            <Text style={styles.newsText}>{titleToShow}</Text>
+            <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={styles.button}

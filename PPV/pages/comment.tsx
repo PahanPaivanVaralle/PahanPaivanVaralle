@@ -117,7 +117,9 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             }}
           >
             <Text style={[styles.text, modalStyles.title]}>Comments</Text>
-            <Text style={[styles.text, modalStyles.title, { color: textColor }]}>
+            <Text
+              style={[styles.text, modalStyles.title, { color: textColor }]}
+            >
               Comments
             </Text>
             <Pressable onPress={onClose}>
@@ -177,8 +179,13 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
                 onLongPress={() => handleDeleteComment(item)}
                 delayLongPress={500}
               >
-                <Text style={[styles.text, modalStyles.commentText]}>
-                <Text style={[styles.text, modalStyles.commentText, { color: textColor }]}>
+                <Text
+                  style={[
+                    styles.text,
+                    modalStyles.commentText,
+                    { color: textColor },
+                  ]}
+                >
                   {item.comment}
                 </Text>
               </Pressable>
