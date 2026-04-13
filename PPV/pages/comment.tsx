@@ -9,7 +9,7 @@ import {
   TextInput,
   FlatList,
 } from 'react-native';
-import { pb, getUserID } from '../lib/Pocketbase';
+import { pb, getUserID } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
 import { useTheme } from '../lib/ThemeContext';
