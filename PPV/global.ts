@@ -381,7 +381,6 @@ export const styles = StyleSheet.create({
     color: '#444',
   },
   settingsOptionBtnTextActive: {
-    fontWeight: '700',
     color: '#111',
   },
   settingsStepper: {
@@ -485,4 +484,4 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
-  })
+});

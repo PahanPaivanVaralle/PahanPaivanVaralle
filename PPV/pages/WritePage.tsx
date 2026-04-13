@@ -50,7 +50,7 @@ export default function WritePage() {
           style={[styles.button, { backgroundColor: theme.button }]}
           onPress={handleSubmit}
         >
-          <Text>Send your letter</Text>
+          <Text style={styles.text}>Send your letter</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAwareScrollView>

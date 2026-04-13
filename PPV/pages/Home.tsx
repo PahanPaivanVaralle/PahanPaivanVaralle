@@ -113,7 +113,7 @@ export default function Home() {
           />
         </Pressable>
 
-        <Text style={{ fontSize: 16, color: '#555' }}>
+        <Text style={[styles.text, styles.postInteractionText]}>
           {likeCounts[item.id] ?? 0}
         </Text>
 
@@ -125,7 +125,7 @@ export default function Home() {
           />
         </Pressable>
 
-        <Text style={{ fontSize: 16, color: '#555' }}>
+        <Text style={[styles.text, styles.postInteractionText]}>
           {commentCounts[item.id] ?? 0}
         </Text>
       </View>
@@ -145,30 +145,16 @@ export default function Home() {
       renderItem={renderItem}
       ListHeaderComponent={
         <>
-          <Text
-            style={{
-              fontSize: 16,
-              color: '#555',
-              paddingHorizontal: 20,
-              marginTop: 20,
-            }}
-          >
+          <Text style={[styles.text, styles.header]}>
             Heres a positive message for you made by one of our users to
             brighten up your day!
           </Text>
 
           <View style={styles.textContainer}>
-            <Text style={styles.letterText}>{message}</Text>
+            <Text style={[styles.text, styles.letterText]}>{message}</Text>
           </View>
 
-          <Text
-            style={{
-              fontSize: 16,
-              color: '#555',
-              marginBottom: 10,
-              paddingHorizontal: 20,
-            }}
-          >
+          <Text style={[styles.text, styles.header]}>
             Here you can see the latest images uploaded by our users. Feel free
             to use the camera to share your own positive moments!
           </Text>

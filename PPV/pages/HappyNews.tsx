@@ -81,14 +81,7 @@ export default function HappyNews() {
         paddingBottom: headerHeight,
       }}
     >
-      <Text
-        style={{
-          fontSize: 16,
-          color: '#555',
-          paddingHorizontal: 20,
-          marginTop: 20,
-        }}
-      >
+      <Text style={[styles.text, styles.header]}>
         Here is the happiest of news around the world!
       </Text>
       {news.map((item) => {

@@ -92,7 +92,9 @@ export default function Settings() {
           onPress={() => setProfileOpen((o) => !o)}
           activeOpacity={0.7}
         >
-          <Text style={styles.settingsSectionTitle}>Profile</Text>
+          <Text style={[styles.text, styles.settingsSectionTitle]}>
+            Profile
+          </Text>
           <Ionicons
             name={profileOpen ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -102,7 +104,7 @@ export default function Settings() {
         {profileOpen && (
           <View style={{ gap: 12 }}>
             <TextInput
-              style={styles.settingsNameInput}
+              style={[styles.text, styles.settingsNameInput]}
               value={userName}
               onChangeText={setUserName}
               placeholder="Your name"
@@ -125,6 +127,7 @@ export default function Settings() {
               />
               <Text
                 style={[
+                  styles.text,
                   styles.settingsSaveBtnText,
                   nameSaved && styles.settingsSaveBtnTextSaved,
                 ]}
@@ -143,7 +146,7 @@ export default function Settings() {
           onPress={() => setAppearanceOpen((o) => !o)}
           activeOpacity={0.7}
         >
-          <Text style={styles.settingsSectionTitle}>Themes</Text>
+          <Text style={[styles.text, styles.settingsSectionTitle]}>Themes</Text>
           <Ionicons
             name={appearanceOpen ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -165,7 +168,9 @@ export default function Settings() {
                   colors={t.gradient}
                   style={styles.settingsPreview}
                 />
-                <Text style={styles.settingsLabel}>{t.name}</Text>
+                <Text style={[styles.text, styles.settingsLabel]}>
+                  {t.name}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -179,7 +184,7 @@ export default function Settings() {
           onPress={() => setMapOpen((o) => !o)}
           activeOpacity={0.7}
         >
-          <Text style={styles.settingsSectionTitle}>Map</Text>
+          <Text style={[styles.text, styles.settingsSectionTitle]}>Map</Text>
           <Ionicons
             name={mapOpen ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -206,9 +211,11 @@ export default function Settings() {
                   >
                     <Text
                       style={[
+                        styles.text,
                         styles.settingsOptionBtnText,
                         gpsAccuracy === opt.value &&
                           styles.settingsOptionBtnTextActive,
+                        ,
                       ]}
                     >
                       {opt.label}
@@ -239,14 +246,20 @@ export default function Settings() {
                   style={styles.settingsStepperBtn}
                   onPress={() => setDefaultZoom(defaultZoom - 1)}
                 >
-                  <Text style={styles.settingsStepperBtnText}>−</Text>
+                  <Text style={[styles.text, styles.settingsStepperBtnText]}>
+                    −
+                  </Text>
                 </TouchableOpacity>
-                <Text style={styles.settingsStepperValue}>{defaultZoom}</Text>
+                <Text style={[styles.text, styles.settingsStepperValue]}>
+                  {defaultZoom}
+                </Text>
                 <TouchableOpacity
                   style={styles.settingsStepperBtn}
                   onPress={() => setDefaultZoom(defaultZoom + 1)}
                 >
-                  <Text style={styles.settingsStepperBtnText}>+</Text>
+                  <Text style={[styles.text, styles.settingsStepperBtnText]}>
+                    +
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
