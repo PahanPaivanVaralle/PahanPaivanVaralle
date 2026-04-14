@@ -8,6 +8,7 @@ import {
   View,
   TextInput,
   FlatList,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { pb, getUserID } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
@@ -103,7 +104,11 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
 
   return (
     <Modal transparent visible={visible} animationType="slide">
+
       <View style={modalStyles.commentView}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
         <View style={[modalStyles.modalView, { backgroundColor: bgColor }]}>
           <View
             style={{
@@ -175,8 +180,11 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             )}
           />
         </View>
+
       </View>
+
     </Modal>
+
   );
 }
 
