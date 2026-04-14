@@ -318,7 +318,7 @@ export const styles = StyleSheet.create({
   settingsSectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#555',
+    color: 'black',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 16,
