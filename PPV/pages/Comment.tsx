@@ -109,13 +109,16 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
-              alignItems: 'center',
               marginBottom: 10,
             }}
           >
             <Text style={[styles.text, modalStyles.title]}>Kommentit</Text>
-            <Pressable onPress={onClose}>
-              <Ionicons name="close-circle" size={30} color={accentColor} />
+            <Pressable hitSlop={50} onPress={onClose}>
+              <Ionicons
+                name="close-circle"
+                size={30}
+                color={'black'}
+              />
             </Pressable>
           </View>
           <TextInput

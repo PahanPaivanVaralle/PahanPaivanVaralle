@@ -43,6 +43,7 @@ export default function WritePage() {
             numberOfLines={10}
             value={message}
             onChangeText={handleChange}
+            placeholderTextColor={"black"}
             placeholder="Kirjoita positiivinen viesti tähän..."
           />
         </View>
