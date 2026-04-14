@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type ThemeName = 'Rosa' | 'Sunset' | 'Ocean' | 'Forest';
+export type ThemeName = 'Ruusu' | 'Auringonlasku' | 'Meri' | 'Metsä';
 
 export interface Theme {
   name: ThemeName;
@@ -12,28 +12,28 @@ export interface Theme {
 
 export const THEMES: Theme[] = [
   {
-    name: 'Rosa',
+    name: 'Ruusu',
     gradient: ['rgba(181, 218, 206, 1)', 'rgba(236, 192, 209, 1)'],
     tabBar: 'rgba(236, 192, 209, 0.8)',
     button: 'rgba(236, 192, 209, 1)',
   },
   {
-    name: 'Sunset',
+    name: 'Auringonlasku',
     gradient: ['rgba(255, 210, 130, 1)', 'rgba(255, 120, 100, 1)'],
     tabBar: 'rgba(255, 150, 100, 0.8)',
     button: 'rgba(255, 210, 130, 1)',
   },
   {
-    name: 'Ocean',
+    name: 'Meri',
     gradient: ['rgba(160, 220, 240, 1)', 'rgba(70, 130, 200, 1)'],
     tabBar: 'rgba(70, 130, 200, 0.8)',
     button: 'rgba(160, 220, 240, 1)',
   },
   {
-    name: 'Forest',
+    name: 'Metsä',
     gradient: ['rgba(160, 230, 180, 1)', 'rgba(60, 160, 80, 1)'],
     tabBar: 'rgba(60, 160, 80, 0.8)',
-    button: 'rgba(160, 230, 180, 1)'
+    button: 'rgba(160, 230, 180, 1)',
   },
 ];
 

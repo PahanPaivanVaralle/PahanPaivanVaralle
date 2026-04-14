@@ -124,7 +124,7 @@ export default function Camera() {
           completedImageUrl: pb.files.getURL(img, img.image),
         } as never);
       } else {
-        navigation.navigate('Map', {
+        navigation.navigate('Kartta', {
           newMarker: {
             la,
             lo,
