@@ -82,7 +82,7 @@ export default function HappyNews() {
       }}
     >
       <Text style={[styles.text, styles.header]}>
-        Here is the happiest of news around the world!
+        Tässä iloisimmat uutiset ympäri maailmaa!
       </Text>
       {news.map((item) => {
         const translation = translatedTitles[item.id];
@@ -104,14 +104,14 @@ export default function HappyNews() {
                   )
                 }
               >
-                <Text style={styles.text}>Read article</Text>
+                <Text style={styles.text}>Lue juttu</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.button, { backgroundColor: theme.button }]}
                 onPress={() => translateItem(item)}
               >
-                <Text style={styles.text}>Translate</Text>
+                <Text style={styles.text}>Käännä</Text>
               </TouchableOpacity>
             </View>
           </View>

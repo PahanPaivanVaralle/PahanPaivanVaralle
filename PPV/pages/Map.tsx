@@ -165,7 +165,7 @@ export default function MapPage() {
       });
       taskMarkersRef.current = tasks;
     } catch (e) {
-      console.error('Markkereiden lataus epäonnistui:', e);
+      console.error('Loading markers has failed:', e);
     }
   };
 
@@ -177,7 +177,7 @@ export default function MapPage() {
       .catch((e) => {
         if (isLike) liked.current.delete(markerId);
         else liked.current.add(markerId);
-        console.error('Tykkäys epäonnistui:', e);
+        console.error('Liking failed:', e);
       });
   };
 
@@ -225,7 +225,7 @@ export default function MapPage() {
           return;
         }
       }
-      navigation.navigate('Camera', {
+      navigation.navigate('Kamera', {
         taskId,
         taskTitle: task?.title ?? 'Tehtävä',
       });

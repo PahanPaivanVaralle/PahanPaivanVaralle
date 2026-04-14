@@ -43,14 +43,14 @@ export default function WritePage() {
             numberOfLines={10}
             value={message}
             onChangeText={handleChange}
-            placeholder="Write your positive message here..."
+            placeholder="Kirjoita positiivinen viesti tähän..."
           />
         </View>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: theme.button }]}
           onPress={handleSubmit}
         >
-          <Text style={styles.text}>Send your letter</Text>
+          <Text style={styles.text}>Lähetä kirje</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAwareScrollView>

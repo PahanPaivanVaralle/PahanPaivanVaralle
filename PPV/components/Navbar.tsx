@@ -14,7 +14,7 @@ function SettingsButton() {
   const navigation = useNavigation<any>();
   return (
     <TouchableOpacity
-      onPress={() => navigation.navigate('Settings')}
+      onPress={() => navigation.navigate('Asetukset')}
       style={{ marginRight: 8, padding: 10 }}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
@@ -39,7 +39,7 @@ export default function Navbar() {
           position: 'absolute',
           elevation: 0,
         },
-        tabBarLabelStyle: { fontFamily: 'Capriola-Regular'},
+        tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           elevation: 0,
@@ -49,7 +49,7 @@ export default function Navbar() {
       }}
     >
       <BottomTab.Screen
-        name="Home"
+        name="Koti"
         component={Home}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -58,7 +58,7 @@ export default function Navbar() {
         }}
       />
       <BottomTab.Screen
-        name="Map"
+        name="Kartta"
         component={MapPage}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -67,7 +67,7 @@ export default function Navbar() {
         }}
       />
       <BottomTab.Screen
-        name="Camera"
+        name="Kamera"
         component={Camera}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -76,7 +76,7 @@ export default function Navbar() {
         }}
       />
       <BottomTab.Screen
-        name="Happy News"
+        name="Iloisia uutisia"
         component={HappyNews}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -85,7 +85,7 @@ export default function Navbar() {
         }}
       />
       <BottomTab.Screen
-        name="Write a letter"
+        name="Kirjoita kirje"
         component={WritePage}
         options={{
           tabBarIcon: ({ color, size }) => (
@@ -94,10 +94,10 @@ export default function Navbar() {
         }}
       />
       <BottomTab.Screen
-        name="Settings"
+        name="Asetukset"
         component={Settings}
         options={{
-          title: 'Settings',
+          title: 'Asetukset',
           tabBarItemStyle: { display: 'none' },
           headerRight: () => null,
           headerLeft: () => {

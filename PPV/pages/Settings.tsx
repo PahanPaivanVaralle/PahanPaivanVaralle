@@ -17,9 +17,9 @@ import { pb, getUserID } from '../lib/pocketbase';
 type GpsAccuracy = 'best' | 'high' | 'balanced';
 
 const GPS_OPTIONS: { value: GpsAccuracy; label: string }[] = [
-  { value: 'best', label: 'Most accurate' },
-  { value: 'high', label: 'Normal' },
-  { value: 'balanced', label: 'Battery saving' },
+  { value: 'best', label: 'Tarkin' },
+  { value: 'high', label: 'Perus' },
+  { value: 'balanced', label: 'Virransäästö' },
 ];
 
 const MAP_GPS_KEY = 'ppv_map_gps_accuracy';
@@ -93,7 +93,7 @@ export default function Settings() {
           activeOpacity={0.7}
         >
           <Text style={[styles.text, styles.settingsSectionTitle]}>
-            Profile
+            Käyttäjä
           </Text>
           <Ionicons
             name={profileOpen ? 'chevron-up' : 'chevron-down'}
@@ -107,7 +107,7 @@ export default function Settings() {
               style={[styles.text, styles.settingsNameInput]}
               value={userName}
               onChangeText={setUserName}
-              placeholder="Your name"
+              placeholder="Nimesi"
               placeholderTextColor="#aaa"
               maxLength={40}
               returnKeyType="done"
@@ -132,7 +132,7 @@ export default function Settings() {
                   nameSaved && styles.settingsSaveBtnTextSaved,
                 ]}
               >
-                {nameSaved ? 'Saved!' : 'Save'}
+                {nameSaved ? 'Tallennettu!' : 'Tallenna'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -146,7 +146,7 @@ export default function Settings() {
           onPress={() => setAppearanceOpen((o) => !o)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.text, styles.settingsSectionTitle]}>Themes</Text>
+          <Text style={[styles.text, styles.settingsSectionTitle]}>Teemat</Text>
           <Ionicons
             name={appearanceOpen ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -184,7 +184,7 @@ export default function Settings() {
           onPress={() => setMapOpen((o) => !o)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.text, styles.settingsSectionTitle]}>Map</Text>
+          <Text style={[styles.text, styles.settingsSectionTitle]}>Kartta</Text>
           <Ionicons
             name={mapOpen ? 'chevron-up' : 'chevron-down'}
             size={18}
@@ -196,7 +196,7 @@ export default function Settings() {
             {/* GPS accuracy */}
             <View>
               <Text style={[styles.settingsRowLabel, styles.text]}>
-                GPS accuracy
+                Sijainnin tarkkuus
               </Text>
               <View style={styles.settingsOptionRow}>
                 {GPS_OPTIONS.map((opt) => (
@@ -228,7 +228,7 @@ export default function Settings() {
             {/* Tracking by default */}
             <View style={styles.settingsRow}>
               <Text style={[styles.settingsRowLabel, styles.text]}>
-                Tracking by default
+                Sijainnin seuranta oletuksena
               </Text>
               <Switch
                 value={defaultTracking}
@@ -239,7 +239,7 @@ export default function Settings() {
             {/* Default zoom */}
             <View style={styles.settingsRow}>
               <Text style={[styles.settingsRowLabel, styles.text]}>
-                Default zoom
+                Vakiosuurennus
               </Text>
               <View style={styles.settingsStepper}>
                 <TouchableOpacity

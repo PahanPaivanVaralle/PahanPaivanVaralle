@@ -146,8 +146,8 @@ export default function Home() {
       ListHeaderComponent={
         <>
           <Text style={[styles.text, styles.header]}>
-            Heres a positive message for you made by one of our users to
-            brighten up your day!
+            Tässä toisen käyttäjän kirjoittama positiivinen viesti piristääksesi
+            päivääsi!
           </Text>
 
           <View style={styles.textContainer}>
@@ -155,8 +155,8 @@ export default function Home() {
           </View>
 
           <Text style={[styles.text, styles.header]}>
-            Here you can see the latest images uploaded by our users. Feel free
-            to use the camera to share your own positive moments!
+            Täältä löydät uusimmat käyttäjien lähettämät kuvat. Jaa omat
+            positiiviset hetkesi käyttämällä kameraa!
           </Text>
         </>
       }
