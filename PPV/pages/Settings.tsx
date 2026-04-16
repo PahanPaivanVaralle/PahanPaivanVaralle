@@ -13,6 +13,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEMES, ThemeName, useTheme } from '../lib/ThemeContext';
 import { styles } from '../global';
 import { pb, getUserID } from '../lib/pocketbase';
+import { RecordModel } from 'pocketbase';
+import { BarChart, LineChart, PieChart, PopulationPyramid, RadarChart, BubbleChart } from "react-native-gifted-charts";
+import { useHeaderHeight } from '@react-navigation/elements';
 
 type GpsAccuracy = 'best' | 'high' | 'balanced';
 
@@ -26,10 +29,21 @@ const MAP_GPS_KEY = 'ppv_map_gps_accuracy';
 const MAP_TRACKING_KEY = 'ppv_map_default_tracking';
 const MAP_ZOOM_KEY = 'ppv_map_default_zoom';
 
+type NumberStat = {
+  label: string;
+  value: number;
+};
+
+type StringStat = {
+  label: string;
+  value: number;
+};
+
 export default function Settings() {
   const { theme, setThemeName } = useTheme();
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [mapOpen, setMapOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [gpsAccuracy, setGpsAccuracyState] = useState<GpsAccuracy>('best');
   const [defaultTracking, setDefaultTrackingState] = useState(false);
   const [defaultZoom, setDefaultZoomState] = useState(5);
@@ -37,6 +51,11 @@ export default function Settings() {
   const [userName, setUserName] = useState('');
   const [userRecordId, setUserRecordId] = useState('');
   const [nameSaved, setNameSaved] = useState(false);
+  const [batteryData, setBatteryData] = useState<NumberStat[]>([]);
+  const [manufacturerData, setManufacturerData] = useState<NumberStat[]>([]);
+  const [osData, setOSData] = useState<NumberStat[]>([]);
+  const [likeData, setLikesData] = useState<NumberStat[]>([]);
+  const headerHeight = useHeaderHeight();
 
   useEffect(() => {
     (async () => {
@@ -59,6 +78,62 @@ export default function Settings() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      console.log("Loading statistics..")
+      const records = await pb.collection('users').getFullList();
+      const likes = await pb.collection('likes').getFullList({
+        expand: 'user',
+      });
+
+      const batteryData = records.map((record) => ({
+        label: record.username,
+        value: parseInt(record.device_battery_level?.replace('%', '') || '0'),
+      }));
+
+      const manufacturerCounts: Record<string, number> = {};
+      const OSCounts: Record<string, number> = {};
+      const LikeCounts: Record<string, number> = {};
+
+      for (const like of likes) {
+        const liked_user = like.expand?.user.username ?? 'Unknown';
+
+        LikeCounts[liked_user] = (LikeCounts[liked_user] || 0) + 1;
+      }
+
+      for (const record of records) {
+        const manufacturer = record.device_manufacturer ?? 'Unknown';
+        const os = record.device_os_version ?? 'Unknown';
+
+        manufacturerCounts[manufacturer] =
+          (manufacturerCounts[manufacturer] || 0) + 1;
+
+        OSCounts[os] = (OSCounts[os] || 0) + 1;
+      }
+
+      const manufacturerData = Object.entries(manufacturerCounts).map(
+        ([label, value]) => ({ label, value }),
+      );
+
+      const OSData = Object.entries(OSCounts).map(([label, value]) => ({
+        label,
+        value,
+      }));
+
+      const LikeData = Object.entries(LikeCounts).map(([label, value]) => ({
+        label,
+        value,
+      }));
+
+      setLikesData(LikeData);
+      setOSData(OSData);
+      setManufacturerData(manufacturerData);
+      setBatteryData(batteryData);
+    };
+
+    load();
+  }, [adminOpen]);
 
   const saveUserName = async () => {
     if (!userRecordId) return;
@@ -84,7 +159,12 @@ export default function Settings() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.settingsContainer}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.settingsContainer,
+        { paddingBottom: headerHeight },
+      ]}
+    >
       {/* Profiili */}
       <View style={styles.settingsSection}>
         <TouchableOpacity
@@ -262,6 +342,76 @@ export default function Settings() {
                   </Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        )}
+      </View>
+      {/* Admin */}
+      <View style={styles.settingsSection}>
+        <TouchableOpacity
+          style={styles.settingsSectionHeader}
+          onPress={() => setAdminOpen((o) => !o)}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[styles.text, styles.settingsSectionTitle, { color: 'red' }]}
+          >
+            Admin
+          </Text>
+          <Ionicons
+            name={adminOpen ? 'chevron-up' : 'chevron-down'}
+            size={18}
+            color="#555"
+          />
+        </TouchableOpacity>
+        {adminOpen && (
+          <View style={{ gap: 16 }}>
+            <View>
+              <Text
+                style={[
+                  styles.settingsRowLabel,
+                  styles.text,
+                  { textAlign: 'center', paddingBottom: 10 },
+                ]}
+              >
+                Käyttäjien akkuprosentit
+              </Text>
+              <LineChart
+                maxValue={100}
+                adjustToWidth={true}
+                showValuesAsDataPointsText={true}
+                data={batteryData}
+              />
+              <Text
+                style={[
+                  styles.settingsRowLabel,
+                  styles.text,
+                  { textAlign: 'center', paddingTop: 25 },
+                ]}
+              >
+                Käyttäjien puhelinvalmistajat
+              </Text>
+              <BarChart adjustToWidth={true} data={manufacturerData} />
+              <Text
+                style={[
+                  styles.settingsRowLabel,
+                  styles.text,
+                  { textAlign: 'center', paddingTop: 25 },
+                ]}
+              >
+                Käyttäjien käyttöjärjestelmät
+              </Text>
+              <BarChart adjustToWidth={true} data={osData} />
+              <Text
+                style={[
+                  styles.settingsRowLabel,
+                  styles.text,
+                  { textAlign: 'center', paddingTop: 25 },
+                ]}
+              >
+                Käyttäjien tykkäykset
+              </Text>
+              <BarChart adjustToWidth={true} data={likeData} />
             </View>
           </View>
         )}
