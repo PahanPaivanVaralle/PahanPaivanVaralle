@@ -37,7 +37,7 @@ export default function WritePage() {
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
         <View style={styles.textContainer}>
           <TextInput
-            style={styles.text}
+            style={[styles.text, {textAlign: "center"}]}
             maxLength={256}
             multiline={true}
             numberOfLines={10}

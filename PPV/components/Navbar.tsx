@@ -33,6 +33,7 @@ export default function Navbar() {
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'black',
         headerTitleStyle: { fontFamily: 'Capriola-Regular' },
+        headerTitleAllowFontScaling: false,
         headerTintColor: 'black',
         tabBarStyle: {
           backgroundColor: theme.tabBar,
@@ -40,6 +41,7 @@ export default function Navbar() {
           elevation: 0,
         },
         tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
+        tabBarAllowFontScaling: false,
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           elevation: 0,
