@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
   },
 
   textContainer: {
-    marginTop: 50,
+    marginTop: 24,
     alignSelf: 'center',
     width: '90%',
     padding: 20,
@@ -30,7 +30,6 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 4,
     shadowOffset: { width: -1, height: 2 },
-    bottom: 20,
     justifyContent: 'center',
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -48,10 +47,10 @@ export const styles = StyleSheet.create({
     fontFamily: 'Capriola-Regular',
   },
   letterText: {
-    fontSize: 30,
+    fontSize: 24,
     color: '#333',
     textAlign: 'center',
-    fontFamily: 'Jua-Regular',
+    fontFamily: 'KiwiMaruRegular',
     flexWrap: 'wrap',
   },
   postInteractionText: {

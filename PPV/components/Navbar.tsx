@@ -39,6 +39,7 @@ export default function Navbar() {
           position: 'absolute',
           elevation: 0,
         },
+        animation: 'fade',
         tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',

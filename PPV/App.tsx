@@ -21,7 +21,7 @@ const MyTheme = {
 function RootStack() {
   const [loaded, error] = useFonts({
     'Capriola-Regular': require('./assets/fonts/Capriola-Regular.ttf'),
-    'Jua-Regular': require('./assets/fonts/Jua-Regular.ttf'),
+    KiwiMaruRegular: require('./assets/fonts/KiwiMaruRegular.ttf'),
   });
 
   return (
