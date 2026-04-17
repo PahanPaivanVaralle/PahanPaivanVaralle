@@ -104,7 +104,6 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
 
   return (
     <Modal transparent visible={visible} animationType="slide">
-
       <View style={modalStyles.commentView}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={StyleSheet.absoluteFillObject} />
@@ -126,6 +125,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               />
             </Pressable>
           </View>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 10}}>
           <TextInput
             maxLength={256}
             multiline
@@ -133,6 +134,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
               styles.text,
               styles.commentInput,
               {
+                flex: 1,
                 borderColor: '#000',
                 borderWidth: 2,
               },
@@ -143,22 +145,8 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             placeholderTextColor="#000"
           />
 
-          <View style={{ flexDirection: 'row', gap: 10 }}>
             <Pressable
-              style={[
-                modalStyles.button,
-                { flex: 1, backgroundColor: accentColor },
-              ]}
-              onPress={onClose}
-            >
-              <Text style={[styles.text, modalStyles.buttonText]}>Sulje</Text>
-            </Pressable>
-
-            <Pressable
-              style={[
-                modalStyles.button,
-                { flex: 1, backgroundColor: accentColor },
-              ]}
+              style={[modalStyles.button, { backgroundColor: accentColor }]}  
               onPress={handleCommentSubmit}
             >
               <Text style={[styles.text, modalStyles.buttonText]}>Lähetä</Text>
@@ -180,9 +168,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             )}
           />
         </View>
-
       </View>
-
     </Modal>
 
   );
@@ -217,12 +203,13 @@ const modalStyles = StyleSheet.create({
     marginTop: 10,
   },
   button: {
-    marginTop: 10,
-    padding: 15,
+    marginTop: 0,
+    paddingVertical: 10,
     borderRadius: 10,
-    width: '50%',
     borderWidth: 2,
     borderColor: '#000',
+    paddingHorizontal: 30,
+    height: 45,
   },
   buttonText: {
     color: 'white',
