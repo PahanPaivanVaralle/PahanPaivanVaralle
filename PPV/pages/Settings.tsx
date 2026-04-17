@@ -55,6 +55,7 @@ export default function Settings() {
   const [manufacturerData, setManufacturerData] = useState<NumberStat[]>([]);
   const [osData, setOSData] = useState<Number2Stat[]>([]);
   const [likeData, setLikesData] = useState<NumberStat[]>([]);
+  const [pageLoaded, setPageLoaded] = useState(false);
   const headerHeight = useHeaderHeight();
 
   useEffect(() => {
@@ -76,15 +77,16 @@ export default function Settings() {
         setUserName(record.username ?? '');
         setUserRecordId(record.id);
       }
+      setPageLoaded(true);
     })();
   }, []);
 
   useEffect(() => {
+    if (!pageLoaded) return;
     (async () => {
-      console.log("Loading statistics..")
+      console.log('Loading statistics..');
       const records = await pb.collection('users').getFullList({
-        fields:
-          'device_battery_level,device_manufacturer,device_os_version',
+        fields: 'device_battery_level,device_manufacturer,device_os_version',
       });
 
       const likes = await pb.collection('likes').getFullList({
@@ -151,7 +153,7 @@ export default function Settings() {
       setManufacturerData(manufacturerData);
       setBatteryData(batteryData);
     })();
-  }, [adminOpen]);
+  }, [pageLoaded]);
 
   const saveUserName = async () => {
     if (!userRecordId) return;
@@ -365,7 +367,7 @@ export default function Settings() {
         )}
       </View>
       {/* Admin */}
-      <View style={styles.settingsSection}>
+      <View style={[styles.settingsSection]}>
         <TouchableOpacity
           style={styles.settingsSectionHeader}
           onPress={() => setAdminOpen((o) => !o)}
@@ -382,8 +384,8 @@ export default function Settings() {
             color="#555"
           />
         </TouchableOpacity>
-        {adminOpen && (
-          <View style={{ gap: 16 }}>
+        {pageLoaded && (
+          <View style={{ gap: 16, opacity: adminOpen ? 1 : 0 }}>
             <View>
               <Text
                 style={[
@@ -414,7 +416,7 @@ export default function Settings() {
                 style={[
                   styles.settingsRowLabel,
                   styles.text,
-                  { textAlign: 'center', paddingTop: 25, paddingBottom: 25 },
+                  { textAlign: 'center', paddingTop: 25, paddingBottom: 10 },
                 ]}
               >
                 Käyttäjien käyttöjärjestelmät
@@ -422,7 +424,7 @@ export default function Settings() {
               <View style={{ alignItems: 'center' }}>
                 <PieChart
                   showText={true}
-                  textSize={8}
+                  textSize={8.5}
                   radius={150}
                   data={osData}
                 />
@@ -439,7 +441,7 @@ export default function Settings() {
               <BarChart adjustToWidth={true} data={likeData} />
             </View>
           </View>
-        )}
+          )}
       </View>
     </ScrollView>
   );
