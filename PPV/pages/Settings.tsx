@@ -34,8 +34,8 @@ type NumberStat = {
   value: number;
 };
 
-type StringStat = {
-  label: string;
+type Number2Stat = {
+  text: string;
   value: number;
 };
 
@@ -53,7 +53,7 @@ export default function Settings() {
   const [nameSaved, setNameSaved] = useState(false);
   const [batteryData, setBatteryData] = useState<NumberStat[]>([]);
   const [manufacturerData, setManufacturerData] = useState<NumberStat[]>([]);
-  const [osData, setOSData] = useState<NumberStat[]>([]);
+  const [osData, setOSData] = useState<Number2Stat[]>([]);
   const [likeData, setLikesData] = useState<NumberStat[]>([]);
   const headerHeight = useHeaderHeight();
 
@@ -80,12 +80,25 @@ export default function Settings() {
   }, []);
 
   useEffect(() => {
-    const load = async () => {
+    (async () => {
       console.log("Loading statistics..")
-      const records = await pb.collection('users').getFullList();
+      const records = await pb.collection('users').getFullList({
+        fields:
+          'device_battery_level,device_manufacturer,device_os_version',
+      });
+
       const likes = await pb.collection('likes').getFullList({
         expand: 'user',
       });
+
+      const colors = [
+        '#4CAF50',
+        '#2196F3',
+        '#FF9800',
+        '#F44336',
+        '#9C27B0',
+        '#00BCD4',
+      ];
 
       const batteryData = records.map((record) => ({
         label: record.username,
@@ -116,10 +129,17 @@ export default function Settings() {
         ([label, value]) => ({ label, value }),
       );
 
-      const OSData = Object.entries(OSCounts).map(([label, value]) => ({
-        label,
-        value,
-      }));
+      const totalOS = Object.values(OSCounts).reduce((a, b) => a + b, 0);
+
+      const OSData = Object.entries(OSCounts).map(([label, value], index) => {
+        const percent = (value / totalOS) * 100;
+
+        return {
+          text: `${label} (${percent.toFixed(1)}%)`,
+          value,
+          color: colors[index % colors.length],
+        };
+      });
 
       const LikeData = Object.entries(LikeCounts).map(([label, value]) => ({
         label,
@@ -130,9 +150,7 @@ export default function Settings() {
       setOSData(OSData);
       setManufacturerData(manufacturerData);
       setBatteryData(batteryData);
-    };
-
-    load();
+    })();
   }, [adminOpen]);
 
   const saveUserName = async () => {
@@ -396,12 +414,19 @@ export default function Settings() {
                 style={[
                   styles.settingsRowLabel,
                   styles.text,
-                  { textAlign: 'center', paddingTop: 25 },
+                  { textAlign: 'center', paddingTop: 25, paddingBottom: 25 },
                 ]}
               >
                 Käyttäjien käyttöjärjestelmät
               </Text>
-              <BarChart adjustToWidth={true} data={osData} />
+              <View style={{ alignItems: 'center' }}>
+                <PieChart
+                  showText={true}
+                  textSize={8}
+                  radius={150}
+                  data={osData}
+                />
+              </View>
               <Text
                 style={[
                   styles.settingsRowLabel,
