@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity, Animated, Linking } from 'react-native';
+import { Text, View, TouchableOpacity, Animated, Linking, ActivityIndicator } from 'react-native';
 import { styles } from '../global';
 import ScrollView = Animated.ScrollView;
 import { getNews } from '../utils/newsSorter';
@@ -18,12 +18,15 @@ export default function HappyNews() {
   }>({});
   const [translating, setTranslating] = useState(false);
   const headerHeight = useHeaderHeight();
+  const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       const data = await getNews();
       setNews(data);
+      setLoading(false);
     };
     load();
   }, []);
@@ -84,6 +87,13 @@ export default function HappyNews() {
       <Text style={[styles.text, styles.header]}>
         Tässä iloisimmat uutiset ympäri maailmaa!
       </Text>
+
+      {loading && (
+      <View style={{ alignItems: 'center', marginTop: 80 }}>
+        <ActivityIndicator size="large" color={theme.spinner} />
+      </View>
+      )}
+
       {news.map((item) => {
         const translation = translatedTitles[item.id];
         const titleToShow = translation

@@ -8,6 +8,7 @@ export interface Theme {
   gradient: [string, string];
   tabBar: string;
   button: string;
+  spinner: string;
 }
 
 export const THEMES: Theme[] = [
@@ -16,24 +17,28 @@ export const THEMES: Theme[] = [
     gradient: ['rgba(181, 218, 206, 1)', 'rgba(236, 192, 209, 1)'],
     tabBar: 'rgba(236, 192, 209, 0.8)',
     button: 'rgba(236, 192, 209, 1)',
+    spinner: 'rgb(239, 19, 103)',
   },
   {
     name: 'Auringonlasku',
     gradient: ['rgba(255, 210, 130, 1)', 'rgba(255, 120, 100, 1)'],
     tabBar: 'rgba(255, 150, 100, 0.8)',
     button: 'rgba(255, 210, 130, 1)',
+    spinner: 'rgb(232, 101, 8)',
   },
   {
     name: 'Meri',
     gradient: ['rgba(160, 220, 240, 1)', 'rgba(70, 130, 200, 1)'],
     tabBar: 'rgba(70, 130, 200, 0.8)',
     button: 'rgba(160, 220, 240, 1)',
+    spinner: 'rgb(4, 45, 92)',
   },
   {
     name: 'Metsä',
     gradient: ['rgba(160, 230, 180, 1)', 'rgba(60, 160, 80, 1)'],
     tabBar: 'rgba(60, 160, 80, 0.8)',
     button: 'rgba(160, 230, 180, 1)',
+    spinner: 'rgb(10, 70, 20)',
   },
 ];
 
