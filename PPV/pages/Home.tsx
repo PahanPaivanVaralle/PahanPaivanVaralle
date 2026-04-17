@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, Pressable, FlatList } from 'react-native';
+import { Text, View, Image, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import { styles } from '../global';
 import PocketBase, { RecordModel } from 'pocketbase';
 import { useCallback, useEffect, useState } from 'react';
@@ -11,8 +11,11 @@ import {
 } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import CommentModal from './Comment';
+import { useTheme } from '../lib/ThemeContext';
 
 export default function Home() {
+  const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
   const [message, setMessage] = useState('');
   const [images, setImages] = useState<RecordModel[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -78,8 +81,10 @@ export default function Home() {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       fetchMessage();
       fetchImage();
+      setLoading(false);
     }, []),
   );
 
@@ -149,6 +154,12 @@ export default function Home() {
             Tässä toisen käyttäjän kirjoittama positiivinen viesti piristääksesi
             päivääsi!
           </Text>
+
+          {loading && (
+            <View style={{ alignItems: 'center', marginTop: 80 }}>
+              <ActivityIndicator size="large" color={theme.spinner} />
+            </View>
+          )}
 
           <View style={styles.textContainer}>
             <Text style={[styles.text, styles.letterText]}>{message}</Text>
