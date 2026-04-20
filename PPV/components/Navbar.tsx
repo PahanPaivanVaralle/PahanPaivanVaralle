@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, Text } from 'react-native';
 import { useTheme } from '../lib/ThemeContext';
 import Home from '../pages/Home';
 import MapPage from '../pages/Map';
@@ -23,6 +23,21 @@ function SettingsButton() {
   );
 }
 
+const headerTitle = (children: string) => {
+  return (
+    <Text
+      numberOfLines={1}
+      style={{
+        fontFamily: 'Capriola-Regular',
+        fontSize: 18,
+        textAlign: 'center',
+      }}
+    >
+      {children}
+    </Text>
+  );
+};
+
 const BottomTab = createBottomTabNavigator();
 
 export default function Navbar() {
@@ -30,10 +45,26 @@ export default function Navbar() {
   return (
     <BottomTab.Navigator
       screenOptions={{
+        tabBarLabel: ({ children }) => {
+          return (
+            <Text
+              numberOfLines={2}
+              style={{
+                fontFamily: 'Capriola-Regular',
+                fontSize: 12,
+                textAlign: 'center',
+              }}
+            >
+              {children}
+            </Text>
+          );
+        },
+        headerTitle: ({ children }) => {
+          return headerTitle(children);
+        },
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'black',
         headerTitleStyle: { fontFamily: 'Capriola-Regular' },
-        headerTitleAllowFontScaling: false,
         headerTintColor: 'black',
         tabBarStyle: {
           backgroundColor: theme.tabBar,
@@ -42,7 +73,6 @@ export default function Navbar() {
         },
         animation: 'fade',
         tabBarLabelStyle: { fontFamily: 'Capriola-Regular' },
-        tabBarAllowFontScaling: false,
         headerStyle: {
           backgroundColor: 'rgba(255, 255, 255, 0.2)',
           elevation: 0,
@@ -79,18 +109,20 @@ export default function Navbar() {
         }}
       />
       <BottomTab.Screen
-        name="Iloisia uutisia"
+        name="Uutiset"
         component={HappyNews}
         options={{
+          headerTitle: 'Iloiset uutiset',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="happy" size={size} color={color} />
           ),
         }}
       />
       <BottomTab.Screen
-        name="Kirjoita kirje"
+        name="Kirje"
         component={WritePage}
         options={{
+          headerTitle: 'Kirjoita kirje',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="reader" size={size} color={color} />
           ),
