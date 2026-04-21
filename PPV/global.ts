@@ -59,7 +59,7 @@ export const styles = StyleSheet.create({
   },
   imageStyle: {
     width: '100%',
-    height: 250,
+    height: 350,
     borderRadius: 10,
     marginBottom: 15,
   },
