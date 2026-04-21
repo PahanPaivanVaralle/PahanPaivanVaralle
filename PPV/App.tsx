@@ -19,11 +19,6 @@ const MyTheme = {
 };
 
 function RootStack() {
-  const [loaded, error] = useFonts({
-    'Capriola-Regular': require('./assets/fonts/Capriola-Regular.ttf'),
-    KiwiMaruRegular: require('./assets/fonts/KiwiMaruRegular.ttf'),
-  });
-
   return (
     <Stack.Navigator
       screenOptions={{
@@ -100,6 +95,11 @@ function BlockedScreen() {
 export default function App() {
   const [banned, setBanned] = useState<boolean | null>(null);
 
+  const [loaded, error] = useFonts({
+    'Capriola-Regular': require('./assets/fonts/Capriola-Regular.ttf'),
+    KiwiMaruRegular: require('./assets/fonts/KiwiMaruRegular.ttf'),
+  });
+
   useEffect(() => {
     Appearance.setColorScheme('dark');
 
@@ -126,7 +126,7 @@ export default function App() {
           setBanned(false);
         }
       };
-      checkBan();
+      await checkBan();
 
       interval = setInterval(() => {
         checkBan();
@@ -137,6 +137,8 @@ export default function App() {
 
     return () => clearInterval(interval);
   }, []);
+
+  if (!loaded || error) return;
 
   if (banned != null && banned) return <BlockedScreen />;
   else if (banned != null) {
