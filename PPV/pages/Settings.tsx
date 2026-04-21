@@ -14,7 +14,14 @@ import { THEMES, ThemeName, useTheme } from '../lib/ThemeContext';
 import { styles } from '../global';
 import { pb, getUserID } from '../lib/pocketbase';
 import { RecordModel } from 'pocketbase';
-import { BarChart, LineChart, PieChart, PopulationPyramid, RadarChart, BubbleChart } from "react-native-gifted-charts";
+import {
+  BarChart,
+  LineChart,
+  PieChart,
+  PopulationPyramid,
+  RadarChart,
+  BubbleChart,
+} from 'react-native-gifted-charts';
 import { useHeaderHeight } from '@react-navigation/elements';
 
 type GpsAccuracy = 'best' | 'high' | 'balanced';
@@ -56,6 +63,10 @@ export default function Settings() {
   const [osData, setOSData] = useState<Number2Stat[]>([]);
   const [likeData, setLikesData] = useState<NumberStat[]>([]);
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackSending, setFeedbackSending] = useState(false);
   const headerHeight = useHeaderHeight();
 
   useEffect(() => {
@@ -176,6 +187,22 @@ export default function Settings() {
     const clamped = Math.min(15, Math.max(4, val));
     setDefaultZoomState(clamped);
     await AsyncStorage.setItem(MAP_ZOOM_KEY, String(clamped));
+  };
+
+  const sendFeedback = async () => {
+    if (!feedbackText.trim() || feedbackSending) return;
+    setFeedbackSending(true);
+    try {
+      await pb.collection('feedback').create({
+        user: userRecordId || undefined,
+        feedback: feedbackText.trim(),
+      });
+      setFeedbackText('');
+      setFeedbackSent(true);
+      setTimeout(() => setFeedbackSent(false), 3000);
+    } finally {
+      setFeedbackSending(false);
+    }
   };
 
   return (
@@ -366,6 +393,70 @@ export default function Settings() {
           </View>
         )}
       </View>
+      {/* Palaute */}
+      <View style={styles.settingsSection}>
+        <TouchableOpacity
+          style={styles.settingsSectionHeader}
+          onPress={() => setFeedbackOpen((o) => !o)}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.text, styles.settingsSectionTitle]}>
+            Palaute
+          </Text>
+          <Ionicons
+            name={feedbackOpen ? 'chevron-up' : 'chevron-down'}
+            size={18}
+            color="#555"
+          />
+        </TouchableOpacity>
+        {feedbackOpen && (
+          <View style={{ gap: 12 }}>
+            <TextInput
+              style={[
+                styles.text,
+                styles.settingsNameInput,
+                { height: 100, textAlignVertical: 'top' },
+              ]}
+              value={feedbackText}
+              onChangeText={setFeedbackText}
+              placeholder="Kirjoita palautteesi tähän..."
+              placeholderTextColor="#aaa"
+              multiline
+              numberOfLines={4}
+              maxLength={2000}
+            />
+            <TouchableOpacity
+              style={[
+                styles.settingsSaveBtn,
+                feedbackSent && styles.settingsSaveBtnSaved,
+              ]}
+              onPress={sendFeedback}
+              activeOpacity={0.7}
+              disabled={feedbackSending || !feedbackText.trim()}
+            >
+              <Ionicons
+                name={feedbackSent ? 'checkmark' : 'send-outline'}
+                size={15}
+                color={feedbackSent ? '#1a7a3f' : '#333'}
+              />
+              <Text
+                style={[
+                  styles.text,
+                  styles.settingsSaveBtnText,
+                  feedbackSent && styles.settingsSaveBtnTextSaved,
+                ]}
+              >
+                {feedbackSent
+                  ? 'Lähetetty!'
+                  : feedbackSending
+                    ? 'Lähetetään...'
+                    : 'Lähetä palaute'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
       {/* Admin */}
       <View style={[styles.settingsSection]}>
         <TouchableOpacity
@@ -441,7 +532,7 @@ export default function Settings() {
               <BarChart adjustToWidth={true} data={likeData} />
             </View>
           </View>
-          )}
+        )}
       </View>
     </ScrollView>
   );
