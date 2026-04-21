@@ -13,8 +13,11 @@ export default function WritePage() {
     if (message.trim() === '') {
       return;
     }
+
+    const e = message.replace(/[\r\n]+/g, '\n');
+
     try {
-      await pb.collection('messages').create({ msg: message });
+      await pb.collection('messages').create({ msg: e });
       setMessage('');
     } catch (err) {
       console.error(err);
@@ -22,13 +25,6 @@ export default function WritePage() {
   };
 
   const handleChange = (e: string) => {
-    if (!e) return;
-    e = e.replace(/[\r\n]+/g, '\n');
-
-    const lines = e.split('\n');
-    if (lines.length > 10) {
-      return;
-    }
     setMessage(e);
   };
 
@@ -43,7 +39,7 @@ export default function WritePage() {
             numberOfLines={10}
             value={message}
             onChangeText={handleChange}
-            placeholderTextColor={"black"}
+            placeholderTextColor={"grey"}
             placeholder="Kirjoita positiivinen viesti tähän..."
           />
         </View>

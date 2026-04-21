@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import { styles } from '../global';
 import PocketBase, { RecordModel } from 'pocketbase';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
@@ -16,6 +17,7 @@ import { useTheme } from '../lib/ThemeContext';
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
+  const headerHeight = useHeaderHeight();
   const [message, setMessage] = useState('');
   const [images, setImages] = useState<RecordModel[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -148,6 +150,7 @@ export default function Home() {
       data={images}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
+      contentContainerStyle={{ paddingBottom: headerHeight }}
       ListHeaderComponent={
         <>
           <Text style={[styles.text, styles.header]}>
