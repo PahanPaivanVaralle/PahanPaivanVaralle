@@ -18,7 +18,6 @@ import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { distanceMetres, TaskMarker } from '../utils/streak';
-import { Platform } from 'react-native';
 import { useTheme } from '../lib/ThemeContext';
 
 interface ImageRecord {
@@ -35,7 +34,12 @@ export default function Camera() {
     title: string;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   const { theme } = useTheme();
+  const ref = useRef<CameraView>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const { taskId, taskTitle } = route.params ?? {};
@@ -60,13 +64,6 @@ export default function Camera() {
       )
       .catch(console.error);
   }, []);
-  const [facing, setFacing] = useState<CameraType>('back');
-  const [permission, requestPermission] = useCameraPermissions();
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
-  const ref = useRef<CameraView>(null);
-  const insets = useSafeAreaInsets();
-  const askDestination = (uri: string) => setPreviewUri(uri);
-  const closePreview = () => setPreviewUri(null);
 
   const uploadAndNavigate = async (uri: string, forceTaskId?: string) => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -97,8 +94,6 @@ export default function Camera() {
       }
     }
 
-    const nearbyTask = targetTask;
-
     setUploading(true);
     try {
       const fd = new FormData();
@@ -108,10 +103,10 @@ export default function Camera() {
         .collection('map_markers')
         .create({ lang: la, long: lo, image: img.id });
 
-      if (nearbyTask) {
+      if (targetTask) {
         Alert.alert(
           'Tehtävä suoritettu! 🎉',
-          `"${nearbyTask.title}" on merkitty tehdyksi.`,
+          `"${targetTask.title}" on merkitty tehdyksi.`,
         );
         navigation.navigate('Map', {
           newMarker: {
@@ -120,7 +115,7 @@ export default function Camera() {
             url: pb.files.getURL(img, img.image),
             id: rec.id,
           },
-          completedTaskId: nearbyTask.id,
+          completedTaskId: targetTask.id,
           completedImageUrl: pb.files.getURL(img, img.image),
         } as never);
       } else {
@@ -149,33 +144,34 @@ export default function Camera() {
   const takePicture = async () => {
     if (!ref.current || uploading) return;
     const photo = await ref.current.takePictureAsync({ quality: 0.7 });
-    if (photo?.uri) askDestination(photo.uri);
+    if (photo?.uri) setPreviewUri(photo.uri);
   };
 
-  const openNativeCamera = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Lupa vaaditaan', 'Kameran käyttö vaatii luvan.');
-      return;
+  const pickImage = async (source: 'camera' | 'gallery') => {
+    if (source === 'camera') {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Lupa vaaditaan', 'Kameran käyttö vaatii luvan.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.7,
+      });
+      if (!result.canceled) setPreviewUri(result.assets[0].uri);
+    } else {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Lupa vaaditaan', 'Gallerian käyttö vaatii luvan.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.7,
+      });
+      if (!result.canceled) setPreviewUri(result.assets[0].uri);
     }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      quality: 0.7,
-    });
-    if (!result.canceled) askDestination(result.assets[0].uri);
-  };
-
-  const pickFromGallery = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Lupa vaaditaan', 'Gallerian käyttö vaatii luvan.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.7,
-    });
-    if (!result.canceled) askDestination(result.assets[0].uri);
   };
 
   if (!permission) return null;
@@ -230,7 +226,10 @@ export default function Camera() {
         >
           {uploading && <ActivityIndicator color="#fff" />}
         </TouchableOpacity>
-        <TouchableOpacity onPress={pickFromGallery} disabled={uploading}>
+        <TouchableOpacity
+          onPress={() => pickImage('gallery')}
+          disabled={uploading}
+        >
           <Ionicons
             name="image"
             size={64}
@@ -240,7 +239,7 @@ export default function Camera() {
       </View>
       <TouchableOpacity
         style={styles.nativeCameraButton}
-        onPress={openNativeCamera}
+        onPress={() => pickImage('camera')}
         disabled={uploading}
       >
         <Ionicons name="camera" size={48} color="white" />
@@ -257,9 +256,7 @@ export default function Camera() {
           <View style={styles.previewActions}>
             <TouchableOpacity
               style={styles.previewBtn}
-              onPress={() => {
-                closePreview();
-              }}
+              onPress={() => setPreviewUri(null)}
               disabled={uploading}
             >
               <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -271,7 +268,7 @@ export default function Camera() {
                 onPress={() => {
                   const tid = pendingTask.id;
                   setPendingTask(null);
-                  closePreview();
+                  setPreviewUri(null);
                   uploadAndNavigate(previewUri!, tid);
                 }}
                 disabled={uploading}
@@ -289,7 +286,7 @@ export default function Camera() {
               <TouchableOpacity
                 style={[styles.previewBtn, styles.previewBtnPrimary]}
                 onPress={() => {
-                  closePreview();
+                  setPreviewUri(null);
                   uploadAndNavigate(previewUri!);
                 }}
                 disabled={uploading}
@@ -305,7 +302,7 @@ export default function Camera() {
             <TouchableOpacity
               style={[styles.previewBtn, styles.previewBtnSecondary]}
               onPress={() => {
-                closePreview();
+                setPreviewUri(null);
                 uploadToFeed(previewUri!);
               }}
               disabled={uploading}
