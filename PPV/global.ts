@@ -58,7 +58,7 @@ export const styles = StyleSheet.create({
     fontSize: 16,
   },
   imageStyle: {
-    width: '100%',
+    width: 350,
     height: 350,
     borderRadius: 10,
     marginBottom: 15,
