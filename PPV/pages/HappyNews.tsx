@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity, Animated, Linking, ActivityIndicator } from 'react-native';
+import { Text, View, TouchableOpacity, Animated, Linking, ActivityIndicator, Image } from 'react-native';
 import { styles } from '../global';
 import ScrollView = Animated.ScrollView;
 import { getNews } from '../utils/newsSorter';
@@ -88,45 +88,46 @@ export default function HappyNews() {
         Tässä iloisimmat uutiset ympäri maailmaa!
       </Text>
 
-      {loading && (
-      <View style={{ alignItems: 'center', marginTop: 80 }}>
-        <ActivityIndicator size="large" color={theme.spinner} />
-      </View>
+      {loading ? (
+        <Image
+          source={require('../assets/loading.gif')}
+          style={{ alignSelf: 'center' }}
+        ></Image>
+      ) : (
+        news.map((item) => {
+            const translation = translatedTitles[item.id];
+            const titleToShow = translation
+              ? translation.isTranslated
+                ? translation.translated
+                : translation.original
+              : item.title;
+
+            return (
+              <View key={item.id} style={styles.textContainer}>
+                <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={[styles.button, { backgroundColor: theme.button }]}
+                    onPress={() =>
+                      Linking.openURL(
+                        String(item.links.find((link) => link.url)?.url),
+                      )
+                    }
+                  >
+                    <Text style={styles.text}>Lue juttu</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.button, { backgroundColor: theme.button }]}
+                    onPress={() => translateItem(item)}
+                  >
+                    <Text style={styles.text}>Käännä</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          })
       )}
-
-      {news.map((item) => {
-        const translation = translatedTitles[item.id];
-        const titleToShow = translation
-          ? translation.isTranslated
-            ? translation.translated
-            : translation.original
-          : item.title;
-
-        return (
-          <View key={item.id} style={styles.textContainer}>
-            <Text style={[styles.text, styles.newsText]}>{titleToShow}</Text>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.button }]}
-                onPress={() =>
-                  Linking.openURL(
-                    String(item.links.find((link) => link.url)?.url),
-                  )
-                }
-              >
-                <Text style={styles.text}>Lue juttu</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.button, { backgroundColor: theme.button }]}
-                onPress={() => translateItem(item)}
-              >
-                <Text style={styles.text}>Käännä</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-      })}
     </ScrollView>
   );
 }

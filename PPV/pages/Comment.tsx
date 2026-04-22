@@ -9,11 +9,13 @@ import {
   TextInput,
   FlatList,
   TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { pb, getUserID } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../global';
 import { useTheme } from '../lib/ThemeContext';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 type Props = {
   visible: boolean;
@@ -25,7 +27,10 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   const [text, setText] = useState('');
   const [comments, setComments] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [status, setStatus] = useState({ text: '', color: '' });
+  const headerHeight = useHeaderHeight();
 
+  
   const { theme } = useTheme();
   const accentColor = theme.tabBar;
   const bgColor = theme.gradient[0];
@@ -39,6 +44,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
       setComments(result.items);
     } catch (err) {
       console.log('Error fetching comments:', err);
+      setStatus({ text: 'Virhe: ' + err, color: 'red' });
     }
   };
 
@@ -56,7 +62,7 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
   };
 
   const handleDeleteComment = (item: any) => {
-    if (item.user !== currentUserId) return;
+    if (item.user !== currentUserId) {setStatus({text: "Virhe: Tämä ei ole sinun kommentisi", color: "red"}); return;}
     Alert.alert(
       'Poista kommentti',
       'Haluatko varmasti poistaa tämän kommentin?',
@@ -69,17 +75,21 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
             try {
               await pb.collection('comments').delete(item.id);
               fetchComments();
+              setStatus({ text: '', color: 'red' });
+
             } catch (err) {
               console.error('Error deleting comment:', err);
+              setStatus({ text: 'Virhe: ' + err, color: 'red' });
             }
           },
         },
       ],
     );
+    Keyboard.dismiss();
   };
 
   const handleCommentSubmit = async () => {
-    if (!text.trim()) return;
+    if (!text.trim()) { setStatus({text: "Virhe: Tekstikenttä on tyhjä", color: "red"}); return; }
 
     try {
       const userPbId = await resolveUserPbId();
@@ -91,8 +101,11 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
 
       setText('');
       fetchComments();
+      Keyboard.dismiss();
+      setStatus({ text: 'Kommentti lähetetty!', color: 'green' });
     } catch (err) {
       console.error('Error posting comment:', err);
+      setStatus({ text: 'Virhe: ' + err, color: 'red' });
     }
   };
   useEffect(() => {
@@ -102,9 +115,14 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
     }
   }, [visible, imageId]);
 
+  const handleChange = (e: string) => {
+    setStatus({ text: '', color: 'red' });
+    setText(e);
+  };
+
   return (
     <Modal transparent visible={visible} animationType="slide">
-      <View style={modalStyles.commentView}>
+      <View style={[{ paddingBottom: headerHeight }, modalStyles.commentView]}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={StyleSheet.absoluteFillObject} />
         </TouchableWithoutFeedback>
@@ -118,59 +136,76 @@ export default function CommentModal({ visible, onClose, imageId }: Props) {
           >
             <Text style={[styles.text, modalStyles.title]}>Kommentit</Text>
             <Pressable hitSlop={50} onPress={onClose}>
-              <Ionicons
-                name="close-circle"
-                size={30}
-                color={'black'}
-              />
+              <Ionicons name="close-circle" size={30} color={'black'} />
             </Pressable>
           </View>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'stretch', gap: 10}}>
-          <TextInput
-            maxLength={256}
-            multiline
-            style={[
-              styles.text,
-              styles.commentInput,
-              {
-                flex: 1,
-                borderColor: '#000',
-                borderWidth: 2,
-              },
-            ]}
-            value={text}
-            onChangeText={setText}
-            placeholder="Kirjoita kommentti..."
-            placeholderTextColor="#000"
-          />
+
+          <View
+            style={{ flexDirection: 'row', alignItems: 'stretch', gap: 10 }}
+          >
+            <TextInput
+              maxLength={256}
+              multiline
+              style={[
+                styles.text,
+                styles.commentInput,
+                {
+                  flex: 1,
+                  borderColor: '#000',
+                  borderWidth: 2,
+                },
+              ]}
+              value={text}
+              onChangeText={handleChange}
+              placeholder="Kirjoita kommentti..."
+              placeholderTextColor="#000"
+            />
 
             <Pressable
-              style={[modalStyles.button, { backgroundColor: accentColor }]}  
+              style={[modalStyles.button, { backgroundColor: accentColor }]}
               onPress={handleCommentSubmit}
             >
               <Text style={[styles.text, modalStyles.buttonText]}>Lähetä</Text>
             </Pressable>
           </View>
 
+          <Text
+            style={[styles.text, { textAlign: 'center', color: status.color }]}
+          >
+            {status.text}
+          </Text>
+
           <FlatList
+            keyboardShouldPersistTaps={'handled'}
+            showsVerticalScrollIndicator={false}
             data={comments}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <Pressable
-                onLongPress={() => handleDeleteComment(item)}
-                delayLongPress={500}
+              <View
+                style={[
+                  modalStyles.commentText,
+                  {
+                    minHeight: 60,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  },
+                ]}
               >
-                <Text style={[styles.text, modalStyles.commentText]}>
-                  {item.comment}
-                </Text>
-              </Pressable>
+                <Text style={styles.text}>{item.comment}</Text>
+                {item.user == currentUserId && (
+                  <Ionicons
+                    onPress={() => handleDeleteComment(item)}
+                    name="trash"
+                    size={28}
+                  />
+                )}
+              </View>
             )}
           />
         </View>
       </View>
     </Modal>
-
   );
 }
 
