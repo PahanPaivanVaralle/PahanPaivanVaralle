@@ -1,13 +1,14 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, Pressable, FlatList, ActivityIndicator } from 'react-native';
+import { Text, View, Image, Pressable, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { styles } from '../global';
 import PocketBase, { RecordModel } from 'pocketbase';
-import { useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   pb,
   loadLikedFeedImageIds,
   toggleFeedImageLike,
+  getUserID,
 } from '../lib/pocketbase';
 import { Ionicons } from '@expo/vector-icons';
 import CommentModal from './Comment';
@@ -41,6 +42,45 @@ export default function Home() {
       console.log('Error fetching positive message:', err);
     }
   };
+
+  const handleReport = async () => {
+      if (message.trim() === '') {
+        return;
+      }
+      try {
+        const userPbId = await resolveUserPbId();
+        const messageId = await resolveMessageId();
+        if (!userPbId) {
+          throw new Error('Käyttäjätunnusta ei löytynyt');
+        }
+        await pb.collection('reported_messages').create({ msg: message, user: userPbId, reported_id: messageId });
+        setMessage('');
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const resolveMessageId = async (): Promise<string | null> => {
+      try {
+        const res = await pb.collection('messages').getList(1, 1, { filter: `msg="${message}"` });
+        return res.items[0]?.id ?? null;
+      } catch {
+        return null;
+      }
+    };
+
+    const resolveUserPbId = async (): Promise<string | null> => {
+      const uid = await getUserID();
+      if (!uid) return null;
+      try {
+        const res = await pb
+          .collection('users')
+          .getList(1, 1, { filter: `userid="${uid}"` });
+        return res.items[0]?.id ?? null;
+      } catch {
+        return null;
+      }
+    };
 
   const fetchImage = async () => {
     try {
@@ -163,6 +203,12 @@ export default function Home() {
 
           <View style={styles.textContainer}>
             <Text style={[styles.text, styles.letterText]}>{message}</Text>
+            <TouchableOpacity
+                      style={[styles.button, { backgroundColor: theme.button }]}
+                      onPress={handleReport}
+                    >
+                      <Text style={styles.text}>Ilmianna</Text>
+                    </TouchableOpacity>
           </View>
 
           <Text style={[styles.text, styles.header]}>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
-import { pb } from '../lib/pocketbase';
+import { getUserID, pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useTheme } from '../lib/ThemeContext';
@@ -14,7 +14,8 @@ export default function WritePage() {
       return;
     }
     try {
-      await pb.collection('messages').create({ msg: message });
+      const userPbId = await resolveUserPbId();
+      await pb.collection('messages').create({ msg: message, user: userPbId });
       setMessage('');
     } catch (err) {
       console.error(err);
@@ -31,6 +32,19 @@ export default function WritePage() {
     }
     setMessage(e);
   };
+
+  const resolveUserPbId = async (): Promise<string | null> => {
+        const uid = await getUserID();
+        if (!uid) return null;
+        try {
+          const res = await pb
+            .collection('users')
+            .getList(1, 1, { filter: `userid="${uid}"` });
+          return res.items[0]?.id ?? null;
+        } catch {
+          return null;
+        }
+      };
 
   return (
     <KeyboardAwareScrollView>
