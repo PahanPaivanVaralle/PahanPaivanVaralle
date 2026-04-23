@@ -6,6 +6,7 @@ import {
   Pressable,
   FlatList,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { styles } from '../global';
 import { RecordModel } from 'pocketbase';
@@ -230,7 +231,14 @@ export default function Home() {
                 ></Image>
               ) : (
                 <Text style={[styles.text, styles.letterText]}>{message}</Text>
+                
               )}
+              <TouchableOpacity
+                      style={[styles.button, { backgroundColor: theme.button }]}
+                      onPress={handleReport}
+                    >
+                      <Text style={styles.text}>Ilmianna</Text>
+                    </TouchableOpacity>
             </View>
 
             <Text style={[styles.text, styles.header]}>
