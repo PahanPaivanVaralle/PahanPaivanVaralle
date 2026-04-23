@@ -58,8 +58,8 @@ export const styles = StyleSheet.create({
     fontSize: 16,
   },
   imageStyle: {
-    width: '100%',
-    height: 250,
+    width: 350,
+    height: 350,
     borderRadius: 10,
     marginBottom: 15,
   },

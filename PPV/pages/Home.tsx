@@ -1,8 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, Pressable, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import {
+  Text,
+  View,
+  Image,
+  Pressable,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import { styles } from '../global';
-import PocketBase, { RecordModel } from 'pocketbase';
-import { use, useCallback, useEffect, useState } from 'react';
+import { RecordModel } from 'pocketbase';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useCallback, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   pb,
@@ -17,6 +25,7 @@ import { useTheme } from '../lib/ThemeContext';
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const { theme } = useTheme();
+  const headerHeight = useHeaderHeight();
   const [message, setMessage] = useState('');
   const [images, setImages] = useState<RecordModel[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -25,6 +34,7 @@ export default function Home() {
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>(
     {},
   );
+  const [enlargedImage, setEnlargedImage] = useState('');
 
   const fetchMessage = async () => {
     try {
@@ -121,19 +131,32 @@ export default function Home() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
-      fetchMessage();
-      fetchImage();
-      setLoading(false);
+      let isActive = true;
+
+      const load = async () => {
+        setLoading(true);
+        await Promise.all([fetchMessage(), fetchImage()]);
+        if (isActive) setLoading(false);
+      };
+
+      load();
+
+      return () => {
+        isActive = false;
+      };
     }, []),
   );
 
   const renderItem = ({ item }) => (
     <View style={styles.imageContainer}>
-      <Image
-        source={{ uri: pb.files.getURL(item, item.image) }}
-        style={styles.imageStyle}
-      />
+      <Pressable
+        onPress={() => setEnlargedImage(pb.files.getURL(item, item.image))}
+      >
+        <Image
+          source={{ uri: pb.files.getURL(item, item.image) }}
+          style={[styles.imageStyle, {}]}
+        />
+      </Pressable>
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Pressable
@@ -184,40 +207,72 @@ export default function Home() {
   );
 
   return (
-    <FlatList
-      data={images}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      ListHeaderComponent={
-        <>
-          <Text style={[styles.text, styles.header]}>
-            Tässä toisen käyttäjän kirjoittama positiivinen viesti piristääksesi
-            päivääsi!
-          </Text>
+    <View style={{ flex: 1 }}>
+      <FlatList
+        keyboardShouldPersistTaps={"handled"}
+        data={images}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: headerHeight }}
+        ListHeaderComponent={
+          <>
+            <Text style={[styles.text, styles.header]}>
+              Tässä toisen käyttäjän kirjoittama positiivinen viesti
+              piristääksesi päivääsi!
+            </Text>
 
-          {loading && (
-            <View style={{ alignItems: 'center', marginTop: 80 }}>
-              <ActivityIndicator size="large" color={theme.spinner} />
+            <View style={styles.textContainer}>
+              {loading ? (
+                //<ActivityIndicator animating={true} size="large" color={theme.spinner} />
+                <Image
+                  source={require('../assets/loading.gif')}
+                  style={{alignSelf: "center"}}
+                ></Image>
+              ) : (
+                <Text style={[styles.text, styles.letterText]}>{message}</Text>
+              )}
             </View>
-          )}
 
-          <View style={styles.textContainer}>
-            <Text style={[styles.text, styles.letterText]}>{message}</Text>
-            <TouchableOpacity
-                      style={[styles.button, { backgroundColor: theme.button }]}
-                      onPress={handleReport}
-                    >
-                      <Text style={styles.text}>Ilmianna</Text>
-                    </TouchableOpacity>
-          </View>
+            <Text style={[styles.text, styles.header]}>
+              Täältä löydät uusimmat käyttäjien lähettämät kuvat. Jaa omat
+              positiiviset hetkesi käyttämällä kameraa!
+            </Text>
+          </>
+        }
+        ListFooterComponent={<StatusBar style="auto" />}
+      />
 
-          <Text style={[styles.text, styles.header]}>
-            Täältä löydät uusimmat käyttäjien lähettämät kuvat. Jaa omat
-            positiiviset hetkesi käyttämällä kameraa!
-          </Text>
-        </>
-      }
-      ListFooterComponent={<StatusBar style="auto" />}
-    />
+      {enlargedImage ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999,
+          }}
+        >
+          <Pressable
+            onPress={() => setEnlargedImage('')}
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Image
+              source={{ uri: enlargedImage }}
+              style={{
+                width: '90%',
+                height: '70%',
+                resizeMode: 'contain',
+              }}
+            />
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
   );
 }

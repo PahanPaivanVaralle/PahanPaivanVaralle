@@ -3,8 +3,8 @@ import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts } from 'expo-font';
 import BottomBar from './components/Navbar';
-import { Appearance, View, Text } from 'react-native';
-import { useEffect, useState } from 'react';
+import { Appearance, View, Text, Image, Animated } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
 import { ThemeProvider, useTheme } from './lib/ThemeContext';
 import { Login, pb, getUserID } from './lib/pocketbase';
 
@@ -19,11 +19,6 @@ const MyTheme = {
 };
 
 function RootStack() {
-  const [loaded, error] = useFonts({
-    'Capriola-Regular': require('./assets/fonts/Capriola-Regular.ttf'),
-    KiwiMaruRegular: require('./assets/fonts/KiwiMaruRegular.ttf'),
-  });
-
   return (
     <Stack.Navigator
       screenOptions={{
@@ -49,55 +44,108 @@ function ThemedApp() {
 
 function BlockedScreen() {
   const { theme } = useTheme();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
   return (
-    <LinearGradient colors={theme.gradient} style={{ flex: 1 }}>
-      <View
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: 'black',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Animated.Text
         style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
+          color: 'white',
+          textAlign: 'center',
+          fontSize: 60,
+          fontWeight: 'bold',
+          opacity: fadeAnim,
+          scaleX: fadeAnim,
+          scaleY: fadeAnim,
+          zIndex: 1,
         }}
       >
-        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold' }}>
-          YOU HAVE BEEN BANNED
-        </Text>
-      </View>
-    </LinearGradient>
+        YOU ARE BANNED
+      </Animated.Text>
+
+      <Animated.Image
+        style={{
+          position: 'absolute',
+          opacity: fadeAnim,
+          scaleX: fadeAnim,
+          scaleY: fadeAnim,
+        }}
+        source={require('./assets/ari.png')}
+      />
+    </View>
   );
 }
 
 export default function App() {
   const [banned, setBanned] = useState<boolean | null>(null);
 
+  const [loaded, error] = useFonts({
+    'Capriola-Regular': require('./assets/fonts/Capriola-Regular.ttf'),
+    KiwiMaruRegular: require('./assets/fonts/KiwiMaruRegular.ttf'),
+  });
+
   useEffect(() => {
     Appearance.setColorScheme('dark');
 
+    let interval: any;
+
     const init = async () => {
       await Login();
-      const id = await getUserID();
-      if (!id) {
-        setBanned(false);
-        return;
-      }
 
-      try {
-        const user = await pb
-          .collection('users')
-          .getFirstListItem(`userid = "${id}"`);
-        setBanned(user.blocked === true);
-      } catch {
-        setBanned(false);
-      }
+      const checkBan = async () => {
+        const id = await getUserID();
+
+        if (!id) {
+          setBanned(false);
+          return;
+        }
+
+        try {
+          const user = await pb
+            .collection('users')
+            .getFirstListItem(`userid = "${id}"`);
+
+          setBanned(user.blocked === true);
+        } catch {
+          setBanned(false);
+        }
+      };
+      await checkBan();
+
+      interval = setInterval(() => {
+        checkBan();
+      }, 5000);
     };
 
     init();
+
+    return () => clearInterval(interval);
   }, []);
 
-  if (banned) return <BlockedScreen />;
+  if (!loaded || error) return;
 
-  return (
-    <ThemeProvider>
-      <ThemedApp />
-    </ThemeProvider>
-  );
+  if (banned != null && banned) return <BlockedScreen />;
+  else if (banned != null) {
+    return (
+      <ThemeProvider>
+        <ThemedApp />
+      </ThemeProvider>
+    );
+  }
 }

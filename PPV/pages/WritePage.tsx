@@ -1,35 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text } from 'react-native';
-import { getUserID, pb } from '../lib/pocketbase';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  Keyboard,
+} from 'react-native';
+import { pb } from '../lib/pocketbase';
 import { styles } from '../global';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useTheme } from '../lib/ThemeContext';
 
 export default function WritePage() {
   const [message, setMessage] = useState('');
+  const [status, setStatus] = useState({ text: '', color: '' });
   const { theme } = useTheme();
 
   const handleSubmit = async () => {
     if (message.trim() === '') {
-      return;
+      return setStatus({text: "Virhe: Viestikenttä on tyhjä", color: "red"});
     }
+
+    const e = message.replace(/[\r\n]+/g, '\n');
+
     try {
-      const userPbId = await resolveUserPbId();
-      await pb.collection('messages').create({ msg: message, user: userPbId });
+      await pb.collection('messages').create({ msg: e });
       setMessage('');
+      setStatus({text: "Viesti lähetetty!", color: "green"});
+      Keyboard.dismiss();
     } catch (err) {
       console.error(err);
+      setStatus({text: "Virhe: " + err, color: "red"});
     }
   };
 
   const handleChange = (e: string) => {
-    if (!e) return;
-    e = e.replace(/[\r\n]+/g, '\n');
-
-    const lines = e.split('\n');
-    if (lines.length > 10) {
-      return;
-    }
+    setStatus({text: "", color: "red"});
     setMessage(e);
   };
 
@@ -47,17 +53,17 @@ export default function WritePage() {
       };
 
   return (
-    <KeyboardAwareScrollView>
+    <KeyboardAwareScrollView keyboardShouldPersistTaps={"handled"}>
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
         <View style={styles.textContainer}>
           <TextInput
-            style={[styles.text, {textAlign: "center"}]}
+            style={[styles.text, { textAlign: 'center' }]}
             maxLength={256}
             multiline={true}
             numberOfLines={10}
             value={message}
             onChangeText={handleChange}
-            placeholderTextColor={"black"}
+            placeholderTextColor={'grey'}
             placeholder="Kirjoita positiivinen viesti tähän..."
           />
         </View>
@@ -67,6 +73,11 @@ export default function WritePage() {
         >
           <Text style={styles.text}>Lähetä kirje</Text>
         </TouchableOpacity>
+        <Text
+          style={[styles.text, { textAlign: 'center', color: status.color, top: 15 }]}
+        >
+          {status.text}
+        </Text>
       </View>
     </KeyboardAwareScrollView>
   );
