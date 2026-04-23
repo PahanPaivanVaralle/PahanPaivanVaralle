@@ -39,6 +39,19 @@ export default function WritePage() {
     setMessage(e);
   };
 
+  const resolveUserPbId = async (): Promise<string | null> => {
+        const uid = await getUserID();
+        if (!uid) return null;
+        try {
+          const res = await pb
+            .collection('users')
+            .getList(1, 1, { filter: `userid="${uid}"` });
+          return res.items[0]?.id ?? null;
+        } catch {
+          return null;
+        }
+      };
+
   return (
     <KeyboardAwareScrollView keyboardShouldPersistTaps={"handled"}>
       <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
